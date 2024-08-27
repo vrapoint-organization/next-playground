@@ -1,24 +1,44 @@
 import { useSocket } from "@/src/scripts/SocketProvider";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+
+const getUserId = () => Math.round((Math.random() * 100) / 10) + 1;
 
 const SignInPage: React.FC = () => {
-  const { connect, isConnected } = useSocket();
-  const [token, setToken] = useState("");
+  const { messages, connect, isConnected, sendMessage } = useSocket();
+  const userNameRef = useRef<string>("User" + getUserId());
 
   const handleSignIn = async () => {
-    // Replace this with your actual sign-in logic
-    const fetchedToken = "example-token"; // Simulate token fetching
-
-    setToken(fetchedToken);
-    connect(fetchedToken); // Establish Socket.IO connection with token
+    const sessionUserName = userNameRef.current;
+    connect(sessionUserName);
   };
 
   return (
     <div>
       <Link href="/ws2">WS2</Link>
+      <Link href="/ws-canvas">ws canvas</Link>
       <button onClick={handleSignIn}>Sign In</button>
-      {isConnected ? <p>Connected to WebSocket</p> : <p>Not Connected</p>}
+      {isConnected ? (
+        <div>
+          Connected to WebSocket
+          <button
+            onClick={() => {
+              sendMessage("User" + getUserId());
+            }}
+          >
+            send message
+          </button>
+          <ul>
+            {messages.map((message, index) => (
+              <li key={`message-${index}`}>
+                [{index + 1}] {message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p>Not Connected</p>
+      )}
     </div>
   );
 };
