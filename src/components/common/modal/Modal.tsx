@@ -37,7 +37,7 @@ export const Modal: React.FC<SimpleDialogProps> = ({
           : header}
       </DialogTitle>
     )}
-    <DialogContent sx={{ padding: "0px 20px" }}>
+    <DialogContent sx={{ paddingBottom: "0px" }}>
       <DialogContentText>{mainContents}</DialogContentText>
     </DialogContent>
     <DialogActions>

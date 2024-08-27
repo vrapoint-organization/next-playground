@@ -11,7 +11,18 @@ import SubmitButton from "@/src/components/common/button/SubmitButton";
 import { FlexEnd } from "@/src/components/style/Style";
 import ModalHeader from "@/src/components/common/modal/ModalHeader";
 import ModalFooter from "@/src/components/common/modal/ModalFooter";
-import TextInput from "@/src/components/common/input/TextInput";
+import TextInput from "@/src/components/common/inputs/TextInput";
+import { Select } from "@mui/material";
+import SelectInput from "@/src/components/common/inputs/SelectInput";
+import SliderInput from "@/src/components/common/inputs/SliderInput";
+import AccordionComponent from "@/src/components/common/surfaces/Accordion";
+import CardComponent from "@/src/components/common/surfaces/Card";
+
+const selectItem = [
+  { name: "test1", value: "1" },
+  { name: "test2", value: "2" },
+  { name: "test3", value: "3" },
+];
 
 const MyModal = ({ onClose }) => {
   return (
@@ -99,6 +110,17 @@ function Home() {
         Text
       </Button>
       <Box>Box</Box>
+      <div style={{ padding: "15px 0px" }}>
+        <SelectInput value={"1"} items={selectItem} />
+      </div>
+      <SliderInput value={25} min={0} max={100} step={0.1} />
+      <AccordionComponent title={t("TestAccordion")}>
+        <SelectInput value={"1"} items={selectItem} />
+        <SliderInput value={25} min={0} max={100} step={0.1} />
+      </AccordionComponent>
+      <div style={{ padding: "15px 0px" }}>
+        <CardComponent />
+      </div>
       <div>Locale : {router.locale}</div>
     </div>
   );
