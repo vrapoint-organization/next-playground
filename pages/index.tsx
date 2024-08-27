@@ -6,10 +6,10 @@ import { useRouter } from "next/router";
 import Button from "@mui/material/Button";
 import styled from "@emotion/styled";
 import { useModal } from "mui-modal-provider";
-import { Modal } from "@/src/component/common/modal/Modal";
-import SubmitButton from "@/src/component/common/button/SubmitButton";
-import { FlexEnd } from "@/src/component/style/Style";
-import ModalHeader from "@/src/component/common/modal/ModalHeader";
+import { Modal } from "@/src/components/common/modal/Modal";
+import SubmitButton from "@/src/components/common/button/SubmitButton";
+import { FlexEnd } from "@/src/components/style/Style";
+import ModalHeader from "@/src/components/common/modal/ModalHeader";
 
 function Home() {
   const { t } = useTranslation();
