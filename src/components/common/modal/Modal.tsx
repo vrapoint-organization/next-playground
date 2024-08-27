@@ -1,12 +1,16 @@
-import { Box } from "@mui/material";
 import Dialog, { DialogProps } from "@mui/material/Dialog";
+import Box from "@mui/material/Box";
+import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import { DialogActions, DialogContentText } from "@mui/material";
+import React from "react";
 
 interface SimpleDialogProps extends DialogProps {
   header?: React.ReactNode;
   mainContents?: React.ReactNode;
-  width: string;
+  width?: string;
   footer?: React.ReactNode;
+  onClose?: () => void;
 }
 
 // Create the dialog you want to use
@@ -15,19 +19,35 @@ export const Modal: React.FC<SimpleDialogProps> = ({
   mainContents,
   footer,
   width,
+  onClose,
   ...props
 }) => (
   <Dialog
     {...props}
     PaperProps={{
       sx: {
-        width: width, // 전달된 너비 적용
-        maxWidth: "none", // 최대 너비 제한 해제
+        width: width,
       },
     }}
   >
-    {header && <DialogTitle>{header}</DialogTitle>}
-    <Box p={2}>{mainContents}</Box>
-    {footer && <Box p={2}>{footer}</Box>}
+    {header && (
+      <DialogTitle>
+        {React.isValidElement(header)
+          ? React.cloneElement(header, { onClose })
+          : header}
+      </DialogTitle>
+    )}
+    <DialogContent sx={{ padding: "0px 20px" }}>
+      <DialogContentText>{mainContents}</DialogContentText>
+    </DialogContent>
+    <DialogActions>
+      {footer && (
+        <Box p={2}>
+          {React.isValidElement(footer)
+            ? React.cloneElement(footer, { onClose })
+            : footer}
+        </Box>
+      )}
+    </DialogActions>
   </Dialog>
 );

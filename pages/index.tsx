@@ -1,35 +1,40 @@
 import { GetServerSidePropsContext } from "next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "next-i18next";
 import { useRouter } from "next/router";
 import Button from "@mui/material/Button";
 import styled from "@emotion/styled";
 import { useModal } from "mui-modal-provider";
-import { Modal } from "@/src/component/common/modal/Modal";
-import SubmitButton from "@/src/component/common/button/SubmitButton";
-import { FlexEnd } from "@/src/component/style/Style";
-import ModalHeader from "@/src/component/common/modal/ModalHeader";
+import { Modal } from "@/src/components/common/modal/Modal";
+import SubmitButton from "@/src/components/common/button/SubmitButton";
+import { FlexEnd } from "@/src/components/style/Style";
+import ModalHeader from "@/src/components/common/modal/ModalHeader";
+import ModalFooter from "@/src/components/common/modal/ModalFooter";
+import TextInput from "@/src/components/common/input/TextInput";
 
-function Home() {
-  const { t } = useTranslation();
-  const router = useRouter();
-  const { showModal } = useModal();
-
-  // Header Component
-  const Header = <ModalHeader title={t("folder_add")} />;
-
-  // Main Contents Component
-  const MainContents = (
-    <input
-      type="text"
-      placeholder={t("new_folder_name")}
-      style={{ width: "100%" }}
-    />
+const MyModal = ({ onClose }) => {
+  return (
+    <Modal
+      open={true}
+      footer={
+        <div>
+          <button
+            onClick={() => {
+              onClose?.();
+            }}
+          >
+            닫기
+          </button>
+        </div>
+      }
+    ></Modal>
   );
+};
 
-  // Footer Component
-  const Footer = (
+const Footer: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const { t } = useTranslation();
+  return (
     <div style={{ width: "100%" }}>
       <FlexEnd>
         <SubmitButton
@@ -37,7 +42,7 @@ function Home() {
           color="error"
           title={t("cancel")}
           customStyle={{ marginRight: "5px" }}
-          onClick={() => console.log("Cancel")}
+          onClick={onClose}
         />
         <SubmitButton
           type="contained"
@@ -48,20 +53,48 @@ function Home() {
       </FlexEnd>
     </div>
   );
+};
+
+function Home() {
+  const { t } = useTranslation();
+  const router = useRouter();
+
+  const { showModal } = useModal();
+
+  // Header Component
+  const Header = <ModalHeader title={t("folder_add")} onClose={() => {}} />;
+  const Footer = (
+    <ModalFooter
+      cancel={t("cancel")}
+      submit={t("submit")}
+      onCancel={() => {
+        console.log("취소");
+      }}
+      onSubmit={() => {
+        console.log("승인");
+      }}
+    />
+  );
+
+  // Main Contents Component
+  const MainContents = <TextInput value="" onChange={() => {}} />;
 
   return (
     <div>
       Home<div>{t("button_okay")}</div>
       <Button
         variant="text"
-        onClick={() =>
-          showModal(Modal, {
+        onClick={() => {
+          const modal = showModal(Modal, {
             header: Header,
             width: "640px",
             mainContents: MainContents,
             footer: Footer,
-          })
-        }
+            onClose: () => {
+              modal.destroy();
+            },
+          });
+        }}
       >
         Text
       </Button>
