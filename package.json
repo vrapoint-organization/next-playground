@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "utils:update": "npm uninstall -D git+https://github.com/vrap-stan/vrutils.git && npm i -D git+https://github.com/vrap-stan/vrutils.git",
-    "env": "vrutils buildenv",
+    "env": "vrutils buildenv transpile",
     "lint": "next lint"
   },
   "dependencies": {
