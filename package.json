@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "utils:update": "npm uninstall -D git+https://github.com/vrap-stan/vrutils.git && npm i -D git+https://github.com/vrap-stan/vrutils.git",
+    "env": "vrutils buildenv",
     "lint": "next lint"
   },
   "dependencies": {
@@ -35,6 +37,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/socket.io-client": "^3.0.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vrutils": "github:vrap-stan/vrutils"
   }
 }
