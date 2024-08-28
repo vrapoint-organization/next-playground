@@ -42,6 +42,8 @@ _ENV_PUBLIC.IS_DEV_OR_QA = _ENV_PUBLIC.IS_DEV || _ENV_PUBLIC.IS_QA;
 ////////////////////////////////////////////////////////////////////////
 // Common Area
 _ENV_PUBLIC.NEXT_PUBLIC_ENVIRONMENT = process.env.NEXT_PUBLIC_ENVIRONMENT_OVERRIDE ?? process.env.NEXT_PUBLIC_ENVIRONMENT;
+_ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS = process.env.NEXT_PUBLIC_USER_ACCESS_OVERRIDE ?? process.env.NEXT_PUBLIC_USER_ACCESS;
+_ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH = process.env.NEXT_PUBLIC_USER_REFRESH_OVERRIDE ?? process.env.NEXT_PUBLIC_USER_REFRESH;
 ////////////////////////////////////////////////////////////////////////
 // Forked Area
 ////////////////////////////////////////////////////////////////////////
@@ -59,7 +61,9 @@ _ENV_PUBLIC.init_ENV_PUBLIC = () => {
     IS_PROD: _ENV_PUBLIC.IS_PROD,
     IS_QA: _ENV_PUBLIC.IS_QA,
     IS_DEV_OR_QA: _ENV_PUBLIC.IS_DEV_OR_QA,
-    NEXT_PUBLIC_ENVIRONMENT: _ENV_PUBLIC.NEXT_PUBLIC_ENVIRONMENT
+    NEXT_PUBLIC_ENVIRONMENT: _ENV_PUBLIC.NEXT_PUBLIC_ENVIRONMENT,
+    NEXT_PUBLIC_USER_ACCESS: _ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS,
+    NEXT_PUBLIC_USER_REFRESH: _ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH
   };
   const isNullish = (val) => val === void 0 || val === null || (val == null ? void 0 : val.length) === 0;
   const missing = Object.keys(variables).filter((key) => isNullish(variables[key])).filter((key) => !key.toLowerCase().startsWith("nullable_"));

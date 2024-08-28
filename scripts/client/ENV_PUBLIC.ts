@@ -23,6 +23,14 @@ export default class ENV_PUBLIC {
 	static NEXT_PUBLIC_ENVIRONMENT = 
 						(process.env.NEXT_PUBLIC_ENVIRONMENT_OVERRIDE ??
 						process.env.NEXT_PUBLIC_ENVIRONMENT) as string;
+		
+	static NEXT_PUBLIC_USER_ACCESS = 
+						(process.env.NEXT_PUBLIC_USER_ACCESS_OVERRIDE ??
+						process.env.NEXT_PUBLIC_USER_ACCESS) as string;
+		
+	static NEXT_PUBLIC_USER_REFRESH = 
+						(process.env.NEXT_PUBLIC_USER_REFRESH_OVERRIDE ??
+						process.env.NEXT_PUBLIC_USER_REFRESH) as string;
   ////////////////////////////////////////////////////////////////////////
   // Forked Area
   
@@ -44,7 +52,9 @@ export default class ENV_PUBLIC {
         IS_PROD: ENV_PUBLIC.IS_PROD,
         IS_QA: ENV_PUBLIC.IS_QA,
         IS_DEV_OR_QA: ENV_PUBLIC.IS_DEV_OR_QA,
-        NEXT_PUBLIC_ENVIRONMENT : ENV_PUBLIC.NEXT_PUBLIC_ENVIRONMENT
+        NEXT_PUBLIC_ENVIRONMENT : ENV_PUBLIC.NEXT_PUBLIC_ENVIRONMENT,
+				NEXT_PUBLIC_USER_ACCESS : ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS,
+				NEXT_PUBLIC_USER_REFRESH : ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH
       };
       const isNullish = (val: string) =>
         val === undefined ||
