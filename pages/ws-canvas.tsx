@@ -1,6 +1,7 @@
 import { useSocket } from "scripts/SocketProvider";
 import React from "react";
 import Link from "next/link";
+import { decompressData } from "@/src/scripts/utils";
 
 function WebSocketCanvas() {
   const { isConnected, sendMousePosition, mousePositions } = useSocket();
@@ -31,10 +32,13 @@ function WebSocketCanvas() {
     >
       <Link href="/ws1">WS1</Link>
       <Link href="/ws2">WS2</Link>
-      {mousePositions.map((data, index) => {
-        const { name, x, y } = data;
+      {mousePositions.map((res, index) => {
+        const { name, data: compressed } = res;
+        const { x, y } = decompressData(compressed);
         return (
-          <div style={{ position: "absolute", top: y, left: x }}>{name}</div>
+          <div key={name} style={{ position: "absolute", top: y, left: x }}>
+            {name}
+          </div>
         );
       })}
     </div>

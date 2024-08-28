@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { io, Socket } from "socket.io-client";
+import { compressData } from "./utils";
 
 interface SocketContextType {
   connect: (token: string) => void;
@@ -16,9 +17,10 @@ interface SocketContextType {
   sendMessage: (message: string) => void;
   sendMousePosition: (x: number, y: number) => void;
   messages: string[];
-  mousePositions: { name: string; x: number; y: number }[];
+  mousePositions: { name: string; data: Uint8Array }[];
 }
 
+// server/websocket_test 참조
 const WEBSOCKET_URL = "http://localhost:8080";
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -88,7 +90,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const sendMousePosition = (x: number, y: number) => {
     if (socketRef.current) {
-      socketRef.current.emit("mousePosition", { x, y });
+      const compressed = compressData({ x, y });
+      socketRef.current.emit("mousePosition", compressed);
     }
   };
 
