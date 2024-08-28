@@ -4,7 +4,6 @@ import { AppCacheProvider } from "@mui/material-nextjs/v13-pagesRouter";
 import { appWithTranslation } from "next-i18next";
 import ModalProvider from "mui-modal-provider";
 import { SocketProvider } from "scripts/SocketProvider";
-import { SessionProvider } from "next-auth/react";
 import { createTheme, ThemeProvider } from "@mui/material";
 import customTheme from "theme/muiTheme";
 import localFont from "next/font/local";
@@ -34,15 +33,13 @@ function App({ Component, pageProps }: AppProps) {
       id="main-container"
     >
       <ThemeProvider theme={theme}>
-        <SessionProvider>
-          <SocketProvider>
-            <ModalProvider>
-              <AppCacheProvider {...pageProps}>
-                <Component {...pageProps} />
-              </AppCacheProvider>
-            </ModalProvider>
-          </SocketProvider>
-        </SessionProvider>
+        <SocketProvider>
+          <ModalProvider>
+            <AppCacheProvider {...pageProps}>
+              <Component {...pageProps} />
+            </AppCacheProvider>
+          </ModalProvider>
+        </SocketProvider>
       </ThemeProvider>
     </main>
   );
