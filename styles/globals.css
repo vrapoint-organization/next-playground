@@ -1,5 +1,9 @@
-body {
+html {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: var(--fs-b1);
+  line-height: var(--lh-b1);
 }
 
 :root {
