@@ -3,9 +3,9 @@ import Link from "next/link";
 import React, { useEffect } from "react";
 
 function Axios() {
-  useEffect(() => {
-    axios.defaults.headers.common["Authorization"] = "Bearer";
-  }, []);
+  // useEffect(() => {
+  //   axios.defaults.headers.common["Authorization"] = "Bearer";
+  // }, []);
   return (
     <div>
       Axios2

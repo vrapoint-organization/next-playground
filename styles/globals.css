@@ -1,10 +1,14 @@
+body {
+  margin: 0;
+}
+
 :root {
   /* primary */
   --primary010: #d6daf4;
   --primary020: #b0b9e8;
   --primary030: #8a98dd;
   --primary040: #6477d1;
-  --primary050: #3749a6;
+  --primary050: #3b82f6;
   --primary060: #2f418f;
   --primary070: #273878;
   --primary080: #1f3061;
@@ -24,10 +28,12 @@
 
   --black: #000000;
 
+  --error: #c7000d;
+
   /* font-size line-height */
   --fs-h1: 48px;
   --lh-h1: 71px;
-  --fs-h2: 34px;
+  --fs-h2: 36px;
   --lh-h2: 50px;
   --fs-h3: 24px;
   --lh-h3: 36px;
