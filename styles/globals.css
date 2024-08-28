@@ -1,7 +1,3 @@
-body {
-  margin: 0;
-}
-
 :root {
   /* primary */
   --primary010: #d6daf4;
@@ -29,6 +25,9 @@ body {
   --black: #000000;
 
   --error: #c7000d;
+
+  /*text */
+  --text050: #374151;
 
   /* font-size line-height */
   --fs-h1: 48px;

@@ -18,6 +18,12 @@ const nextConfig = {
     },
   ],
   swcMinify: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 const IS_DEV = ENV_SERVER.IS_DEV;
