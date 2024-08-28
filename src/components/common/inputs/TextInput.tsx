@@ -5,10 +5,17 @@ const ariaLabel = { "aria-label": "description" };
 
 interface TextFieldProps {
   value: string;
+  placeholder: string;
+  type?: string;
   onChange: (e: string) => void;
 }
 
-const TextInput: React.FC<TextFieldProps> = ({ value, onChange }) => {
+const TextInput: React.FC<TextFieldProps> = ({
+  value,
+  placeholder,
+  type = "string",
+  onChange,
+}) => {
   const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
@@ -22,12 +29,13 @@ const TextInput: React.FC<TextFieldProps> = ({ value, onChange }) => {
 
   return (
     <OutlinedInput
-      placeholder="Placeholder"
+      placeholder={placeholder}
       value={inputValue}
+      type={type}
       onChange={(e) => {
         onChangeValue(e.target.value);
       }}
-      sx={{ width: "100%" }}
+      sx={{ width: "100%", borderRadius: "15px" }}
       inputProps={ariaLabel}
     />
   );

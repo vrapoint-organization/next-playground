@@ -5,7 +5,6 @@ html {
   font-size: var(--fs-b1);
   line-height: var(--lh-b1);
 }
-
 :root {
   /* primary */
   --primary010: #d6daf4;
@@ -33,6 +32,9 @@ html {
   --black: #000000;
 
   --error: #c7000d;
+
+  /*text */
+  --text050: #374151;
 
   /* font-size line-height */
   --fs-h1: 48px;
