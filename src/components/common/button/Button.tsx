@@ -3,7 +3,7 @@ import { ButtonProps } from "@mui/material";
 import { SxProps, Theme } from "@mui/system";
 import React from "react";
 
-interface SubmitButtonProps {
+interface ButtonComponentProps {
   title: string;
   color?: ButtonProps["color"];
   type?: ButtonProps["variant"];
@@ -11,7 +11,7 @@ interface SubmitButtonProps {
   onClick: () => void;
 }
 
-const SubmitButton: React.FC<SubmitButtonProps> = ({
+const ButtonComponent: React.FC<ButtonComponentProps> = ({
   type,
   color,
   title,
@@ -25,4 +25,4 @@ const SubmitButton: React.FC<SubmitButtonProps> = ({
   );
 };
 
-export default SubmitButton;
+export default ButtonComponent;

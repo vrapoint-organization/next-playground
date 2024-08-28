@@ -1,6 +1,6 @@
 import React from "react";
 import { FlexEnd } from "../../style/Style";
-import SubmitButton from "../button/SubmitButton";
+import ButtonComponent from "../button/Button";
 
 interface ModalFooterProps {
   cancel: string;
@@ -20,23 +20,27 @@ const ModalFooter: React.FC<ModalFooterProps> = ({
   return (
     <div style={{ width: "100%" }}>
       <FlexEnd>
-        <SubmitButton
+        <ButtonComponent
           type="outlined"
           color="error"
           title={cancel}
           customStyle={{ marginRight: "5px" }}
           onClick={() => {
             onCancel();
-            onClose();
+            if (onClose) {
+              onClose();
+            }
           }}
         />
-        <SubmitButton
+        <ButtonComponent
           type="contained"
           color="primary"
           title={submit}
           onClick={() => {
             onSubmit();
-            onClose();
+            if (onClose) {
+              onClose();
+            }
           }}
         />
       </FlexEnd>
