@@ -89,7 +89,7 @@ const customTheme: ThemeOptions = {
     },
     primary: {
       light: "#6477d1", // primary040
-      main: "#3749a6", // primary050
+      main: "#3b82f6", // primary050
       dark: "#1f3061", // primary080
       contrastText: "#fff", // white
     },
@@ -151,18 +151,20 @@ const customTheme: ThemeOptions = {
         },
         input: {
           color: "var(--gray090)",
-          padding: "16.5px 16px",
+          padding: "8px 16px",
           "&.Mui-disabled": {
             color: "var(--gray060)",
             "-webkit-text-fill-color": "var(--gray060)",
           },
           "&::placeholder": {
             color: "var(--gray070)",
+
             opacity: 1,
           },
         },
         notchedOutline: {
           borderColor: "var(--gray050)",
+          borderRadius: "5px",
         },
       },
     },

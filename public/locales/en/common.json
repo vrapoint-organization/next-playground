@@ -1,3 +1,7 @@
 {
-  "button_okay": "Okay"
+  "button_okay": "Okay",
+  "find_password": "password/id find",
+  "stay_login": "stay_login",
+  "login": "Login",
+  "sign_up": "SignUp"
 }

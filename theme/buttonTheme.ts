@@ -1,3 +1,5 @@
+import { Padding } from "@mui/icons-material";
+
 declare module "@mui/material/Button" {
   interface ButtonPropsColorOverrides {
     red: true;

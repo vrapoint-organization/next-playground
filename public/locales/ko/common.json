@@ -1,3 +1,7 @@
 {
-  "button_okay": "확인"
+  "button_okay": "확인",
+  "find_password": "비밀번호/아이디 찾기",
+  "stay_login": "로그인 상태 유지",
+  "login": "로그인",
+  "sign_up": "회원가입"
 }
