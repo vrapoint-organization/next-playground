@@ -1,6 +1,6 @@
 import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
 import ObjectViewer from "@/src/components/ObjectViewer";
-import { serverSideUserCheck } from "@/src/serverscripts/serverutils";
+import { translateAndUserCheck } from "@/src/serverscripts/serverutils";
 import { deleteCookie, getCookie } from "cookies-next";
 import { useTranslation } from "next-i18next";
 import { useRouter } from "next/router";
@@ -50,6 +50,6 @@ function logintest() {
   );
 }
 
-export const getServerSideProps = serverSideUserCheck();
+export const getServerSideProps = translateAndUserCheck();
 
 export default logintest;

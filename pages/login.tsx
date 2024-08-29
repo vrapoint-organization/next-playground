@@ -11,7 +11,10 @@ import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import { useRouter } from "next/navigation";
 import API from "@/src/scripts/API";
-import { serverSideUserCheck } from "@/src/serverscripts/serverutils";
+import {
+  translateAndUserCheck,
+  withServerSideTranslations,
+} from "@/src/serverscripts/serverutils";
 
 const login = () => {
   const { t } = useTranslation();
@@ -129,17 +132,7 @@ const login = () => {
 //   }
 // );
 
-export const getServerSideProps = async ({
-  locale,
-  req,
-}: GetServerSidePropsContext) => {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale ?? "ko", ["common"])),
-      // Will be passed to the page component as props
-    },
-  };
-};
+export const getServerSideProps = withServerSideTranslations();
 
 const BackgroundDiv = styled.div`
   width: 100vw;

@@ -24,7 +24,7 @@ export type GetServerSidePropsFunctionType<T = any> = (
 ) => Promise<GetServerSidePropsReturnType<T>> | GetServerSidePropsReturnType<T>;
 
 export const withServerSideTranslations = <T>(
-  fn: GetServerSidePropsFunctionType<T>
+  fn: GetServerSidePropsFunctionType<T> = (ctx) => ({})
 ) => {
   return async (ctx: GetServerSidePropsContext) => {
     const retval = mergeObject(
@@ -40,15 +40,15 @@ export const withServerSideTranslations = <T>(
   };
 };
 
-export const serverSideUserCheck = <T>(
+export const translateAndUserCheck = <T>(
   fn: GetServerSidePropsFunctionType<T> = (ctx) => ({})
 ) => {
-  return withServerSideTranslations(_serverSideUserCheck(fn));
+  return withServerSideTranslations(serverSideUserCheck(fn));
 };
 
 // getServerSideProps 사용 시 래핑 함수
 // 유저가 없으면 홈으로 리다이렉트
-export function _serverSideUserCheck<T = any>(
+export function serverSideUserCheck<T = any>(
   fn: GetServerSidePropsFunctionType<T>,
   redirect = "/login"
 ): (

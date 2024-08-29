@@ -1,4 +1,4 @@
-import { serverSideUserCheck } from "@/src/serverscripts/serverutils";
+import { translateAndUserCheck } from "@/src/serverscripts/serverutils";
 import { setCookie } from "cookies-next";
 import { GetServerSidePropsContext } from "next";
 import React from "react";
@@ -24,7 +24,7 @@ function asdf({ randomValue }: PageProps) {
   );
 }
 
-export const getServerSideProps = serverSideUserCheck<PageProps>(
+export const getServerSideProps = translateAndUserCheck<PageProps>(
   (ctx: GetServerSidePropsContext) => {
     const randomValue = Math.random();
     return {
