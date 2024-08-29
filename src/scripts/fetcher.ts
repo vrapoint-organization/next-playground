@@ -1,6 +1,7 @@
 import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
 import ax, { AxiosResponse } from "axios";
 import { getCookie, setCookie } from "cookies-next";
+import IError from "./IError";
 
 const dropApiUrl = (url: string) => {
   return url.replaceAll("/apis/", "/").replaceAll("/api/", "/");
@@ -75,24 +76,35 @@ const _fetchWithRefresh = async <T = any>(
     }
 
     const errors = res.data?.errors;
-    if (errors) {
+    if (errors && errors?.length > 0) {
       // case 2. Access token 만료 시 재발급 시도
-      if (tryRefreshOnFail) {
-        const tokenExpired = errors.some((error) => {
-          return error.code === "U102"; // 토큰 만료
-        });
+      const accessTokenExpired = errors.some((error) => {
+        return error.code === "U102"; // 토큰 만료
+      });
 
-        if (tokenExpired) {
-          const reissueSuccessful = await reissueToken();
-          if (reissueSuccessful) {
-            // 재발급 성공 시 자기 자신을 다시 호출
-            return _fetchWithRefresh(fn, false, ...params);
-          }
+      if (tryRefreshOnFail && accessTokenExpired) {
+        const reissueSuccessful = await reissueToken();
+        if (reissueSuccessful) {
+          // 재발급 성공 시 자기 자신을 다시 호출
+          return _fetchWithRefresh(fn, false, ...params);
         }
       }
+
+      const errorCodes = errors.map((error) => ({
+        code: error.code,
+        message: error.message,
+        data: error.data,
+      }));
+      throw new IError(errorCodes);
     }
+
+    // 처리되지 않은 에러 핸들링
     console.error({ res });
-    throw new Error("TODO : API에러 핸들링, 콘솔 확인");
+    const defaultError = [
+      { code: "500", message: "No response from server", data: {} },
+    ];
+
+    throw new IError(defaultError);
   });
 };
 

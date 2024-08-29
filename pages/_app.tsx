@@ -32,15 +32,15 @@ function App({ Component, pageProps }: AppProps) {
       style={{ height: "100%" }}
       id="main-container"
     >
-      <ThemeProvider theme={theme}>
-        <SocketProvider>
-          <ModalProvider>
-            <AppCacheProvider {...pageProps}>
+      <SocketProvider>
+        <ModalProvider>
+          <AppCacheProvider>
+            <ThemeProvider theme={theme}>
               <Component {...pageProps} />
-            </AppCacheProvider>
-          </ModalProvider>
-        </SocketProvider>
-      </ThemeProvider>
+            </ThemeProvider>
+          </AppCacheProvider>
+        </ModalProvider>
+      </SocketProvider>
     </main>
   );
 }

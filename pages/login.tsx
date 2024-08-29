@@ -1,6 +1,6 @@
 import { FlexCenterDiv, FlexDiv } from "@/src/components/style/Style";
 import styled from "@emotion/styled";
-import React from "react";
+import React, { useState } from "react";
 import logo from "public/img/logo.png";
 import Image from "next/image";
 import Checkbox from "@mui/material/Checkbox";
@@ -10,10 +10,15 @@ import { GetServerSidePropsContext } from "next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import { useRouter } from "next/navigation";
+import API from "@/src/scripts/API";
+import { serverSideUserCheck } from "@/src/serverscripts/serverutils";
 
 const login = () => {
   const { t } = useTranslation();
   const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
     <BackgroundDiv>
@@ -25,16 +30,16 @@ const login = () => {
         <LoginForm>
           <InputNameP>이메일(Email):</InputNameP>
           <TextInput
-            value={""}
+            value={email}
             placeholder="userName@email.com"
-            onChange={() => {}}
+            onChange={(value) => setEmail(value)}
           />
           <InputNameP>비밀번호(Password):</InputNameP>
           <TextInput
             value={""}
             type="password"
             placeholder="••••••••"
-            onChange={() => {}}
+            onChange={(value) => setPassword(value)}
           />
           <ForgetPasswordDiv>
             <ForgetPasswordSpan>{t("find_password")}</ForgetPasswordSpan>
@@ -64,7 +69,30 @@ const login = () => {
               fontSize: "12px",
             }}
             onClick={() => {
-              router.push("/");
+              new API(router).login(
+                email,
+                password,
+                (res) => {
+                  // 성공 시 UI관련 코드 처리, 또는 화면단에서 뭔가 처리
+                  alert("로그인 성공");
+                  router.push("/");
+                },
+                (err) => {
+                  // 에러 발생 시 UI관련 코드 처리
+                  for (let i = 0; i < err.codes.length; i++) {
+                    const errorInfo = err.codes[i];
+                    const code = errorInfo.code;
+                    switch (code) {
+                      case "U101":
+                      default:
+                        alert(errorInfo.message);
+                        // alert("Unknown Error Occurred. Please contact the administrator.");
+                        break;
+                    }
+                  }
+                }
+              );
+              // router.push("/");
             }}
           />
           <ButtonComponent
@@ -90,17 +118,28 @@ const login = () => {
   );
 };
 
-export async function getServerSideProps({
+// export const getServerSideProps = serverSideUserCheck(
+//   async ({ locale, req }: GetServerSidePropsContext) => {
+//     return {
+//       props: {
+//         ...(await serverSideTranslations(locale ?? "ko", ["common"])),
+//         // Will be passed to the page component as props
+//       },
+//     };
+//   }
+// );
+
+export const getServerSideProps = async ({
   locale,
   req,
-}: GetServerSidePropsContext) {
+}: GetServerSidePropsContext) => {
   return {
     props: {
       ...(await serverSideTranslations(locale ?? "ko", ["common"])),
       // Will be passed to the page component as props
     },
   };
-}
+};
 
 const BackgroundDiv = styled.div`
   width: 100vw;
