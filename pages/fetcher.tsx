@@ -1,7 +1,7 @@
 import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
 import ObjectViewer from "@/src/components/ObjectViewer";
 import fetcher from "@/src/scripts/fetcher";
-import { getCookie } from "cookies-next";
+import { getCookie, setCookie } from "cookies-next";
 import React from "react";
 
 type LoginRes = {
@@ -13,7 +13,8 @@ const expiredToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjQ4MjE2ODAsIk5PIjoiTzVZVjhMMTRlcjNicFV0RkRhVzRWZz09IiwiU0lHTkFUVVJFIjoiZThlNjY5ZDFlY2ZmYzIwZDg0MTFlNjFkZDc1ODc2YmI4Y2QxMWFhOTI0M2VjYjQzNWExYWI4NmNkMDdjNjMxOSIsImlzcyI6ImF1dGgwIn0.wapQRHv02DbYepRcRvgafhfuU2XNTBQC-EMZxWYR9bM";
 
 function FetchTest() {
-  const [check, setCheck] = React.useState({});
+  const [check, setCheck] = React.useState<any[]>([]);
+  const [lastAccess, setLastAccess] = React.useState<string | null>(null);
 
   const speakRefreshToken = () => {
     const refresh = getCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH);
@@ -27,7 +28,7 @@ function FetchTest() {
         onClick={async () => {
           const res = await fetcher.get("/api/test/ok");
           console.log({ res });
-          setCheck(res);
+          setCheck((prev) => [...prev, res]);
         }}
       >
         Server health check
@@ -39,8 +40,9 @@ function FetchTest() {
             password: "stan",
           });
           console.log({ res });
-
-          setCheck(res);
+          setCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH, res.refreshToken);
+          setLastAccess(res.accessToken);
+          setCheck((prev) => [...prev, res]);
         }}
       >
         Login with id:stan, pw:stan
@@ -57,7 +59,7 @@ function FetchTest() {
               const hasExpired = res?.errors?.some(
                 (err: { code: string }) => err?.code === "U102"
               );
-              setCheck({ accessTokenExpired: hasExpired });
+              setCheck((prev) => [...prev, { accessTokenExpired: hasExpired }]);
             });
         }}
       >
@@ -68,14 +70,15 @@ function FetchTest() {
           const instance = fetcher._instance;
           fetcher.setAccessToken(expiredToken);
           speakRefreshToken();
-          const res = await fetcher.get<{}>("/api/v2/s/asset?no=450", {
-            headers: {
-              USER_AUTH_TOKEN: `bearer ${expiredToken}`,
-            },
-          });
+          // const res = await fetcher.get<{}>("/api/v2/s/asset?no=450", {
+          //   headers: {
+          //     USER_AUTH_TOKEN: `bearer ${expiredToken}`,
+          //   },
+          // });
+          const res = await fetcher.get<{}>("/api/v2/s/asset?no=450");
           console.log({ res });
           speakRefreshToken();
-          setCheck(res);
+          setCheck((prev) => [...prev, res]);
         }}
       >
         만료된 토큰으로 요청 후 access/refresh 갱신 확인

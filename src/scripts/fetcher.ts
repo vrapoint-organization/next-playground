@@ -26,20 +26,12 @@ export type ResType<T = any> = {
     | null;
 };
 
-type MethodParams = {
-  get: Parameters<typeof instance.get>;
-  post: Parameters<typeof instance.post>;
-  put: Parameters<typeof instance.put>;
-  delete: Parameters<typeof instance.delete>;
-  patch: Parameters<typeof instance.patch>;
-};
-
 const reissueToken = async (): Promise<true | false> => {
   const refreshToken = getCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH);
   if (!refreshToken) {
     return false;
   }
-  const res = await instance.post("/api/v2/s/auth/refresh", {
+  const res = await instance.post("/v2/s/auth/refresh", {
     refreshToken,
   });
 
@@ -57,8 +49,8 @@ const reissueToken = async (): Promise<true | false> => {
 
   // 재발급 성공
   // setCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS, res.data.data.accessToken);
-  setAccessToken("USER_AUTH_TOKEN", `bearer ${res.data.data.accessToken}`);
-  setCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH, res.data.data.refreshToken);
+  setAccessToken(access);
+  setCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH, refresh);
 
   return true;
 };
@@ -86,7 +78,6 @@ const _fetchWithRefresh = async <T = any>(
     if (errors) {
       // case 2. Access token 만료 시 재발급 시도
       if (tryRefreshOnFail) {
-        debugger;
         const tokenExpired = errors.some((error) => {
           return error.code === "U102"; // 토큰 만료
         });
@@ -146,7 +137,10 @@ const patch = async <T = any>(...params: Parameters<typeof instance.patch>) => {
 };
 
 const setAccessToken = (value: string) => {
-  instance.defaults.headers.common["USER_AUTH_TOKEN"] = `bearer ${value}`;
+  const replaced = value.trim().startsWith("bearer ")
+    ? value.trim()
+    : `bearer ${value.trim()}`;
+  instance.defaults.headers.common["USER_AUTH_TOKEN"] = replaced;
 };
 
 const defaultExports = {
