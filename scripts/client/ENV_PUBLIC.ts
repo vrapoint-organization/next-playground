@@ -33,7 +33,14 @@ export default class ENV_PUBLIC {
 						process.env.NEXT_PUBLIC_USER_REFRESH) as string;
   ////////////////////////////////////////////////////////////////////////
   // Forked Area
-  
+  static NEXT_PUBLIC_WEBSOCKET_URL =
+    (process.env.NEXT_PUBLIC_WEBSOCKET_URL_OVERRIDE ?? (
+      (ENV_PUBLIC.IS_DEV ) ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_DEV :
+      (ENV_PUBLIC.IS_QA  ) ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_QA :
+      (ENV_PUBLIC.IS_PROD) ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_PROD :
+      null
+    )) as string;
+
   ////////////////////////////////////////////////////////////////////////
   // Init Area
   static is_ENV_PUBLIC_init = false;
@@ -54,7 +61,8 @@ export default class ENV_PUBLIC {
         IS_DEV_OR_QA: ENV_PUBLIC.IS_DEV_OR_QA,
         NEXT_PUBLIC_ENVIRONMENT : ENV_PUBLIC.NEXT_PUBLIC_ENVIRONMENT,
 				NEXT_PUBLIC_USER_ACCESS : ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS,
-				NEXT_PUBLIC_USER_REFRESH : ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH
+				NEXT_PUBLIC_USER_REFRESH : ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH,
+				NEXT_PUBLIC_WEBSOCKET_URL : ENV_PUBLIC.NEXT_PUBLIC_WEBSOCKET_URL
       };
       const isNullish = (val: string) =>
         val === undefined ||

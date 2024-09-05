@@ -3,6 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs";
 import i18n_pkg from "./next-i18next.config.js";
 import _ENV_SERVER from "./_ENV/ENV_SERVER.js";
 const ENV_SERVER = _ENV_SERVER.default;
+ENV_SERVER.init_ENV_SERVER();
 
 const nextConfig = {
   reactStrictMode: true,
@@ -14,7 +15,7 @@ const nextConfig = {
     },
     {
       source: "/apis/:path*",
-      destination: `${ENV_SERVER.SERVER_URL}/api/:path*`,
+      destination: `${ENV_SERVER.SERVER_SPRING_URL}/api/:path*`,
     },
   ],
   swcMinify: true,

@@ -46,6 +46,7 @@ _ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS = process.env.NEXT_PUBLIC_USER_ACCESS_OVERRI
 _ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH = process.env.NEXT_PUBLIC_USER_REFRESH_OVERRIDE ?? process.env.NEXT_PUBLIC_USER_REFRESH;
 ////////////////////////////////////////////////////////////////////////
 // Forked Area
+_ENV_PUBLIC.NEXT_PUBLIC_WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL_OVERRIDE ?? (_ENV_PUBLIC.IS_DEV ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_DEV : _ENV_PUBLIC.IS_QA ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_QA : _ENV_PUBLIC.IS_PROD ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_PROD : null);
 ////////////////////////////////////////////////////////////////////////
 // Init Area
 _ENV_PUBLIC.is_ENV_PUBLIC_init = false;
@@ -63,7 +64,8 @@ _ENV_PUBLIC.init_ENV_PUBLIC = () => {
     IS_DEV_OR_QA: _ENV_PUBLIC.IS_DEV_OR_QA,
     NEXT_PUBLIC_ENVIRONMENT: _ENV_PUBLIC.NEXT_PUBLIC_ENVIRONMENT,
     NEXT_PUBLIC_USER_ACCESS: _ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS,
-    NEXT_PUBLIC_USER_REFRESH: _ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH
+    NEXT_PUBLIC_USER_REFRESH: _ENV_PUBLIC.NEXT_PUBLIC_USER_REFRESH,
+    NEXT_PUBLIC_WEBSOCKET_URL: _ENV_PUBLIC.NEXT_PUBLIC_WEBSOCKET_URL
   };
   const isNullish = (val) => val === void 0 || val === null || (val == null ? void 0 : val.length) === 0;
   const missing = Object.keys(variables).filter((key) => isNullish(variables[key])).filter((key) => !key.toLowerCase().startsWith("nullable_"));
