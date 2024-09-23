@@ -7,7 +7,11 @@ import * as THREE from 'three'
 const WebSocketClient = () => {
   const [message, setMessage] = useState("");
   const [response, setResponse] = useState("");
-  const [responseObject, setResponseObject] = useState({});
+  const [responseObject, setResponseObject] = useState({
+    positions: {},
+    assets: [],
+  });
+  const [sendMouse, setSendMouse] = useState(false);
   const [token, setToken] = useState("MASTER");
   const stompClientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -31,14 +35,24 @@ const WebSocketClient = () => {
       
       stompClient.subscribe(`/sub/editor/${sampleUUID}`, (msg) => {
         console.log('received From sub : ', msg);
-        const r = responseObject;
+        const body = JSON.parse(msg.body)
         const data = JSON.parse(msg.body).data
-        if (!r[sampleUUID]) {
-          r[sampleUUID] = [data];
-        } else {
-          r[sampleUUID].push(data);
-        }
-        setResponseObject(r);
+        
+        setResponseObject(prev => {
+          const copied = {...prev};
+          if (body.type === 'COORDINATES') {
+            const positions = copied.positions;
+            positions[data.user] = {x: data.x, y: data.y}
+            copied.positions = positions;
+          } else if (body.type === 'ASSET') {
+            const assets = copied.assets;
+            if (!assets.includes(data.uuid)) {
+              assets.push(data.uuid);
+            }
+            copied.assets = assets;
+          }
+          return copied
+        });
         // console.log({msg});
         // setResponse(JSON.parse(msg.body).data.message);
       });
@@ -59,22 +73,17 @@ const WebSocketClient = () => {
     return stompClient;
   }
   
-  const sendMessage = () => {
+  const sendMessage = (data: { type: string, data: any }) => {
     const client = stompClientRef.current;
-    if (!client) {
+    if (!client || !isConnected) {
       return;
     }
-    
-    client.publish({
-      destination: `/pub/editor/${sampleUUID}`,
-      body: JSON.stringify({
-        type: "COORDINATES",
-        data: {
-          coords : new THREE.Matrix4(),
-          user: token
-        },
-      }),
-    });
+    if (isConnected) {
+      client.publish({
+        destination: `/pub/editor/${sampleUUID}`,
+        body: JSON.stringify(data),
+      });
+    }
   };
   
   useEffect(() => {
@@ -98,33 +107,53 @@ const WebSocketClient = () => {
     }
   }
   
-  useEffect(() => {
-    console.log('responseObject : ', responseObject)
-  }, [responseObject]);
+  function setMouseStatus() {
+    setSendMouse(pre => !pre);
+  }
+  
+  const handleMouseMove = (e) => {
+    if (sendMouse) {
+      sendMessage({type: 'COORDINATES', data: {user: token, x: e.clientX, y: e.clientY}});
+    }
+  }
+  
+  const handleSendRandomData = () => {
+    sendMessage({type: 'ASSET', data: {uuid: Math.random()}});
+  }
   
   return (
-    <>
-      <div>
+    <div style={{width: '100vw', height: '100vh'}} onMouseMove={handleMouseMove}>
+      <div style={{padding: '8px'}}>
+        <h4>Connection</h4>
         <input type="text" value={token} onChange={(e) => setToken(e.target.value)}/>
         <button onClick={handleConnection}>{isConnected ? 'DISCONNECT' : 'CONNECT'}</button>
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <button onClick={sendMessage}>Send</button>
       </div>
-      <div>
-        {responseObject && Object.keys(responseObject).map(key => {
-          return (<div key={key}>
-            <h4 style={{fontSize: '20px'}}>{key}</h4>
-            {responseObject[key].map((s: { coords: THREE.Matrix4, user: string }) => (
-              <h6>{s.user} : {s.coords.elements}</h6>
-            ))}
-          </div>)
-        })}
+      <div style={{padding: '8px'}}>
+        <h4>Actions</h4>
+        <div style={{display: 'flex', padding: '8px', gap: '4px'}}>
+          <button onClick={setMouseStatus}>{sendMouse ? '마우스 위치 정보 보내기 ON' : '마우스 위치 정보 보내기 OFF'}</button>
+          <div>
+            <button onClick={handleSendRandomData}>랜덤 UUID 전송</button>
+          </div>
+        </div>
       </div>
-    </>
+      <div style={{display: 'flex', padding: '8px', border: '1px solid gray'}}>
+        <div style={{borderRight: '1px solid gray', padding: '8px', minWidth: '200px'}}>
+          <h4>Positions</h4>
+          {Object.keys(responseObject.positions).map(name => {
+            console.log('name : ', name)
+            const o = responseObject.positions[name]
+            return (<h6>{name} : {o.x}, {o.y}</h6>)
+          })}
+        </div>
+        <div style={{borderRight: '1px solid gray', padding: '8px', minWidth: '200px'}}>
+          <h4>Assets</h4>
+          {responseObject.assets.map(name => {
+            return (<h6>{name}</h6>)
+          })}
+        </div>
+      </div>
+    </div>
   );
 };
 
