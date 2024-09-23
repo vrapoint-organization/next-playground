@@ -1,6 +1,7 @@
 import { createSocket } from "dgram";
 import React, {
   createContext,
+  MutableRefObject,
   useContext,
   useEffect,
   useRef,
@@ -8,16 +9,15 @@ import React, {
 } from "react";
 import { io, Socket } from "socket.io-client";
 import { compressData } from "./utils";
+import { Client, Stomp } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
 
 interface SocketContextType {
   connect: (token: string) => void;
   disconnect: () => void;
   isConnected: boolean;
-  socket: Socket | null;
-  sendMessage: (message: string) => void;
-  sendMousePosition: (x: number, y: number) => void;
-  messages: string[];
-  mousePositions: { name: string; data: Uint8Array }[];
+  socket: MutableRefObject<Client | null>;
 }
 
 // server/websocket_test 참조
@@ -43,64 +43,48 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isConnected, setIsConnected] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
-  const roomDataRef = useRef<any>(null);
-  const [messages, setMessages] = useState<string[]>([]);
-  const [mousePositions, setMousePositions] = useState<User[]>([]);
+  const socketRef = useRef<Client | null>(null);
 
-  const connect = (userName: string) => {
+  const connect = (token: string) => {
     if (socketRef.current) return;
+    const socket = new SockJS(ENV_PUBLIC.NEXT_PUBLIC_WEBSOCKET_URL);
+    const stompClient = Stomp.over(() => socket);
 
-    const socket = io(WEBSOCKET_URL, { query: { userName } });
-
-    socket.on("connect", () => setIsConnected(true));
-    socket.on("disconnect", () => setIsConnected(false));
-    socket.on("reply", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
-    socket.on("connect_error", (error) =>
-      console.error("Socket error:", error)
+    stompClient.connect(
+      {
+        Authorization: token,
+      },
+      () => {
+        setIsConnected(true);
+      },
+      (err) => {
+        console.log("websocket Error, ", err);
+        setIsConnected(false);
+        if (err.body === "유효하지 않은 권한입니다.") {
+          alert("subscribe 에러 발생");
+        }
+      },
+      () => {
+        setIsConnected(false);
+        console.log("websocket Closed");
+      }
     );
 
-    // Example of handling custom events
-    socket.on("message", (data) => {
-      console.log("Received message:", data);
-    });
+    stompClient.activate();
+    socketRef.current = stompClient;
 
-    socket.on("mousePositions", (data) => {
-      console.log("Received mousePosition:", data);
-      setMousePositions(data);
-    });
-
-    socketRef.current = socket;
+    return stompClient;
   };
 
   const disconnect = () => {
     if (socketRef.current) {
-      socketRef.current.disconnect();
+      socketRef.current.deactivate();
       socketRef.current = null;
     }
   };
 
-  const sendMessage = (message: string) => {
-    if (socketRef.current) {
-      socketRef.current.emit("message", message);
-    }
-  };
-
-  const sendMousePosition = (x: number, y: number) => {
-    if (socketRef.current) {
-      const compressed = compressData({ x, y });
-      socketRef.current.emit("mousePosition", compressed);
-    }
-  };
-
   useEffect(() => {
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
+    return disconnect;
   }, []);
 
   return (
@@ -109,11 +93,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         connect,
         disconnect,
         isConnected,
-        socket: socketRef.current,
-        sendMessage,
-        messages,
-        sendMousePosition,
-        mousePositions,
+        socket: socketRef,
       }}
     >
       {children}
