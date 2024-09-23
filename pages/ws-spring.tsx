@@ -137,8 +137,8 @@ const WebSocketClient = () => {
           </div>
         </div>
       </div>
-      <div style={{display: 'flex', padding: '8px', border: '1px solid gray'}}>
-        <div style={{borderRight: '1px solid gray', padding: '8px', minWidth: '200px'}}>
+      <div style={{display: 'flex', border: '1px solid gray'}}>
+        <div style={{borderRight: '1px solid gray', padding: '16px', minWidth: '200px'}}>
           <h4>Positions</h4>
           {Object.keys(responseObject.positions).map(name => {
             console.log('name : ', name)
@@ -146,7 +146,7 @@ const WebSocketClient = () => {
             return (<h6>{name} : {o.x}, {o.y}</h6>)
           })}
         </div>
-        <div style={{borderRight: '1px solid gray', padding: '8px', minWidth: '200px'}}>
+        <div style={{borderRight: '1px solid gray', padding: '16px', minWidth: '200px'}}>
           <h4>Assets</h4>
           {responseObject.assets.map(name => {
             return (<h6>{name}</h6>)
