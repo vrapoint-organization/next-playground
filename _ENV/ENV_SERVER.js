@@ -72,7 +72,7 @@ _ENV_PUBLIC.init_ENV_PUBLIC = () => {
   const isNullish = (val) => val === void 0 || val === null || (val == null ? void 0 : val.length) === 0;
   const missing = Object.keys(variables).filter((key) => isNullish(variables[key])).filter((key) => !key.toLowerCase().startsWith("nullable_"));
   if (missing.length > 0) {
-    throw new Error(".env.local\uC5D0 \uD658\uACBD\uBCC0\uC218\uB97C \uCD94\uAC00\uD574\uC8FC\uC138\uC694 : " + missing.join(", "));
+    throw new Error(".env.local.local\uC5D0 \uD658\uACBD\uBCC0\uC218\uB97C \uCD94\uAC00\uD574\uC8FC\uC138\uC694 : " + missing.join(", "));
   }
   _ENV_PUBLIC.is_ENV_PUBLIC_init = true;
 };
@@ -110,7 +110,7 @@ _ENV_SERVER.init_ENV_SERVER = () => {
   const isNullish = (val) => val === void 0 || val === null || (val == null ? void 0 : val.length) === 0;
   const missing = Object.keys(variables).filter((key) => isNullish(variables[key])).filter((key) => !key.toLowerCase().startsWith("nullable_"));
   if (missing.length > 0) {
-    throw new Error(".env.local\uC5D0 \uD658\uACBD\uBCC0\uC218\uB97C \uCD94\uAC00\uD574\uC8FC\uC138\uC694 : " + missing.join(", "));
+    throw new Error(".env.local.local\uC5D0 \uD658\uACBD\uBCC0\uC218\uB97C \uCD94\uAC00\uD574\uC8FC\uC138\uC694 : " + missing.join(", "));
   }
   _ENV_SERVER.is_ENV_SERVER_init = true;
 };
