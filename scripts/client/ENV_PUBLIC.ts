@@ -72,7 +72,7 @@ export default class ENV_PUBLIC {
       const missing = Object.keys(variables).filter((key) => isNullish(variables[key])).filter((key) => !key.toLowerCase().startsWith("nullable_"));
     
       if (missing.length > 0) {
-        throw new Error(".env.local에 환경변수를 추가해주세요 : " + missing.join(", "));
+        throw new Error(".env.local.local에 환경변수를 추가해주세요 : " + missing.join(", "));
       }
       ENV_PUBLIC.is_ENV_PUBLIC_init = true;
   

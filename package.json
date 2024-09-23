@@ -31,7 +31,8 @@
     "react-dom": "^18",
     "react-i18next": "^15.0.1",
     "socket.io-client": "^4.7.5",
-    "sockjs-client": "^1.6.1"
+    "sockjs-client": "^1.6.1",
+    "three": "^0.168.0"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -40,6 +41,7 @@
     "@types/react-dom": "^18",
     "@types/socket.io-client": "^3.0.0",
     "@types/sockjs-client": "^1.5.4",
+    "@types/three": "^0.168.0",
     "typescript": "^5",
     "vrutils": "github:vrap-stan/vrutils"
   }
