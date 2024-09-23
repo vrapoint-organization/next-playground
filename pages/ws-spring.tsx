@@ -68,39 +68,19 @@ const WebSocketClient = () => {
     stompClientRef.current = stompClient;
 
     return stompClient;
-<<<<<<< HEAD
-  };
-
-  const sendMessage = () => {
-=======
   }
   
   const sendMessage = (data: { type: string, data: any }) => {
->>>>>>> jiwoo
     const client = stompClientRef.current;
     if (!client || !isConnected) {
       return;
     }
-<<<<<<< HEAD
-
-    client.publish({
-      destination: `/pub/editor/${sampleUUID}`,
-      body: JSON.stringify({
-        type: "COORDINATES",
-        data: {
-          coords: new THREE.Matrix4(),
-          user: token,
-        },
-      }),
-    });
-=======
     if (isConnected) {
       client.publish({
         destination: `/pub/editor/${sampleUUID}`,
         body: JSON.stringify(data),
       });
     }
->>>>>>> jiwoo
   };
 
   useEffect(() => {
@@ -123,47 +103,6 @@ const WebSocketClient = () => {
       await createNewConnect(token);
     }
   }
-<<<<<<< HEAD
-
-  useEffect(() => {
-    console.log("responseObject : ", responseObject);
-  }, [responseObject]);
-
-  return (
-    <>
-      <div>
-        <input
-          type="text"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-        />
-        <button onClick={handleConnection}>
-          {isConnected ? "DISCONNECT" : "CONNECT"}
-        </button>
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <button onClick={sendMessage}>Send</button>
-      </div>
-      <div>
-        {responseObject &&
-          Object.keys(responseObject).map((key, i) => {
-            return (
-              <div key={`key=${i}`}>
-                <h4 style={{ fontSize: "20px" }}>{key}</h4>
-                {responseObject[key].map(
-                  (s: { coords: THREE.Matrix4; user: string }) => (
-                    <h6>
-                      {s.user} : {s.coords.elements}
-                    </h6>
-                  )
-                )}
-              </div>
-            );
-          })}
-=======
   
   function setMouseStatus() {
     setSendMouse(pre => !pre);
@@ -194,7 +133,6 @@ const WebSocketClient = () => {
             <button onClick={handleSendRandomData}>랜덤 UUID 전송</button>
           </div>
         </div>
->>>>>>> jiwoo
       </div>
       <div style={{display: 'flex', border: '1px solid gray'}}>
         <div style={{borderRight: '1px solid gray', padding: '16px', minWidth: '200px'}}>
