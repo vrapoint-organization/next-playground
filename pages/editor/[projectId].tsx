@@ -43,20 +43,6 @@
 //   );
 // }
 
-// export const getServerSideProps = (ctx: GetServerSidePropsContext) => {
-//   const { query } = ctx;
-//   const { id: myId, projectId } = query;
-
-//   return {
-//     props: {
-//       myId,
-//       projectId,
-//     },
-//   };
-// };
-
-// export default Editor;
-
 import { Canvas } from "@react-three/fiber";
 import {
   Stats,
@@ -64,8 +50,18 @@ import {
   OrbitControlsProps,
   Sphere,
 } from "@react-three/drei";
-import { Euler, Matrix4, Quaternion, Vector3 } from "three";
+import {
+  Euler,
+  Matrix4,
+  Quaternion,
+  Vector3,
+  VectorKeyframeTrack,
+} from "three";
 import { useRef, useState } from "react";
+import useEditorSocket from "@/src/scripts/useEditorSocket";
+import Link from "next/link";
+import { GetServerSidePropsContext } from "next";
+import ObjectViewer from "@/src/components/ObjectViewer";
 
 const defaultUsers = [
   {
@@ -86,8 +82,64 @@ const defaultUsers = [
   },
 ];
 
-export default function App() {
+// random color from string
+const randomColorFromString = (str: string) => {
+  return (
+    "#" +
+    str
+      .split("")
+      .reduce((acc, char) => char.charCodeAt(0) + acc, 0)
+      .toString(16)
+  );
+};
+
+const refineEditorData = (
+  myId: string,
+  data: { id: string; matrix: number[] }[]
+) => {
+  // console.log(data);
+  return data
+    .filter((d) => d.id !== myId)
+    .map((d) => {
+      const mat = new Matrix4();
+      mat.fromArray(d.matrix);
+      return {
+        camera: mat,
+        name: d.id,
+        color: randomColorFromString(d.id),
+        id: d.id,
+      };
+    });
+};
+
+export default function Editor({
+  myId,
+  projectId,
+}: {
+  myId: string;
+  projectId: string;
+}) {
+  const {
+    isConnected,
+    subscribeEditor,
+    editorSubscribed,
+    publishEditor,
+    editorData,
+  } = useEditorSocket();
+
   const [users, setUsers] = useState([...defaultUsers]);
+  const lastSent = useRef(0);
+
+  if (!isConnected) {
+    return (
+      <div>
+        Not connected
+        <div>
+          <Link href="/editor">Back to Editor</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
@@ -178,9 +230,44 @@ export default function App() {
           >
             Move User2
           </button>
+          <button
+            onClick={() => {
+              subscribeEditor(projectId);
+            }}
+          >
+            subscribeEditor {editorSubscribed ? "Subscribed" : ""}
+          </button>
+          {editorSubscribed && (
+            <button
+              onClick={() => {
+                publishEditor({ x: 100, y: 200 });
+              }}
+            >
+              Publish
+            </button>
+          )}
+          {/* <ObjectViewer objectData={editorData}></ObjectViewer> */}
         </div>
       </div>
-      <SharedCanvas users={users} onCameraChange={() => {}}></SharedCanvas>
+      <SharedCanvas
+        users={refineEditorData(myId, editorData)}
+        onCameraChange={(e) => {
+          // const t = new Vector3();
+          // e?.target.object.position
+          // console.log(e?.target.object.position);
+          const mat = e?.target.object.matrix.toArray();
+          const now = Date.now();
+          // const canSend = now - lastSent.current > 100;
+          const canSend = true;
+          if (canSend) {
+            lastSent.current = now;
+            publishEditor({
+              id: myId,
+              matrix: mat,
+            });
+          }
+        }}
+      ></SharedCanvas>
     </div>
   );
 }
@@ -201,7 +288,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          array={new Float32Array([0, 0, 0, 0, 0, 1])} // Start at (0,0,0) and go to (0,0,1)
+          array={new Float32Array([0, 0, 0, 0, 0, -1])} // Start at (0,0,0) and go to (0,0,1)
           itemSize={3}
           count={2}
         />
@@ -233,34 +320,42 @@ const SharedCanvas = ({
     camera: Matrix4;
     name: string;
     color: string;
+    id: string;
   }[];
   onCameraChange: OrbitControlsProps["onChange"];
 }) => {
   return (
     <Canvas style={{ width: "100%", height: "100%" }}>
-      {/* <mesh>
-        <boxGeometry args={[2, 2, 2]} />
-        <meshPhongMaterial />
-      </mesh> */}
       {users.map((user) => {
-        // draw tetrahedron with user's name on it
-
         return (
-          // <mesh>
-          //   <tetrahedronGeometry args={[2, 0]} />
-          //   <meshPhongMaterial />
-          //   <textGeometry args={[user.name]} />
-          // </mesh>
           <LineFromMatrix
             matrix={user.camera}
             color={user.color}
+            key={user.id}
           ></LineFromMatrix>
         );
       })}
+      {/* basic cube */}
+      <mesh>
+        <boxGeometry args={[0.1, 0.1, 0.1]} />
+        <meshStandardMaterial color="hotpink" />
+      </mesh>
       <ambientLight intensity={0.1} />
       <directionalLight position={[0, 0, 5]} color="red" />
       <OrbitControls onChange={onCameraChange} />
       {/* <Stats /> */}
     </Canvas>
   );
+};
+
+export const getServerSideProps = (ctx: GetServerSidePropsContext) => {
+  const { query } = ctx;
+  const { id: myId, projectId } = query;
+
+  return {
+    props: {
+      myId,
+      projectId,
+    },
+  };
 };

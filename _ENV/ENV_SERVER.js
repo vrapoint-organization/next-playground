@@ -24,7 +24,7 @@ __export(ENV_SERVER_exports, {
 });
 module.exports = __toCommonJS(ENV_SERVER_exports);
 
-// scripts/ENV_PUBLIC.ts
+// scripts/client/ENV_PUBLIC.ts
 var _a, _b, _c;
 var _ENV_PUBLIC = class _ENV_PUBLIC {
   ////////////////////////////////////////////////////////////////////////

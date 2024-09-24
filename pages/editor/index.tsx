@@ -17,7 +17,7 @@ function Editor({ myId }: { myId: string }) {
         Connect
       </button>
       <div>isConnected : {isConnected ? "true" : "false"}</div>
-      <Link href={`/editor/editor?id=${myId}`}>To editor</Link>
+      <Link href={`/editor/some_project?id=${myId}`}>To editor</Link>
     </div>
   );
 }
