@@ -196,36 +196,33 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
   // Get rotation in Euler angles from the rotation matrix
   const euler = new Euler().setFromQuaternion(rotationQuaternion);
 
-  // return (
-  //   <line
-  //     ref={theRef}
-  //     position={position.toArray()}
-  //     rotation={euler.toArray()}
-  //   >
-  //     <bufferGeometry>
-  //       <bufferAttribute
-  //         attach="attributes-position"
-  //         array={new Float32Array([0, 0, 0, 0, 0, 1])} // Start at (0,0,0) and go to (0,0,1)
-  //         itemSize={3}
-  //         count={2}
-  //       />
-  //     </bufferGeometry>
-  //     <lineBasicMaterial color={color} />
-  //   </line>
-  // );
   return (
-    <>
-      <mesh
-        ref={theRef}
-        position={position.toArray()}
-        rotation={euler.toArray()}
-      >
-        <tetrahedronGeometry args={[0.5]} /> {/* Radius 0.5 */}
-        <meshStandardMaterial color={color} />
-      </mesh>
-      <Sphere args={[0.2, 16, 16]} position={position.toArray()} />
-    </>
+    <line ref={theRef} position={position.toArray()} rotation={euler.toArray()}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          array={new Float32Array([0, 0, 0, 0, 0, 1])} // Start at (0,0,0) and go to (0,0,1)
+          itemSize={3}
+          count={2}
+        />
+      </bufferGeometry>
+      <Sphere args={[0.2, 16, 16]} />
+      <lineBasicMaterial color={color} />
+    </line>
   );
+  // return (
+  //   <>
+  //     <mesh
+  //       ref={theRef}
+  //       position={position.toArray()}
+  //       rotation={euler.toArray()} // 쿼터니언을 받지 않는다
+  //     >
+  //       <tetrahedronGeometry args={[0.5]} /> {/* Radius 0.5 */}
+  //       <meshStandardMaterial color={color} />
+  //       <Sphere args={[0.2, 16, 16]} />
+  //     </mesh>
+  //   </>
+  // );
 }
 
 const SharedCanvas = ({
