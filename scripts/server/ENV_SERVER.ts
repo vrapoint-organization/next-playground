@@ -1,6 +1,6 @@
 
 /* DO NOT EDIT! THIS IS AUTO-GENERATED FILE */
-import ENV_PUBLIC from "../client/ENV_PUBLIC"
+import ENV_PUBLIC from "./../ENV_PUBLIC"
 export default class ENV_SERVER extends ENV_PUBLIC {
   
   ////////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@ export default class ENV_SERVER extends ENV_PUBLIC {
       (ENV_PUBLIC.IS_DEV ) ? process.env.SERVER_SPRING_URL_DEV :
       (ENV_PUBLIC.IS_QA  ) ? process.env.SERVER_SPRING_URL_QA :
       (ENV_PUBLIC.IS_PROD) ? process.env.SERVER_SPRING_URL_PROD :
-      null
+      (process.env.SERVER_SPRING_URL ?? null)
     )) as string;
 
 		static SERVER_NODE_URL =
@@ -21,7 +21,7 @@ export default class ENV_SERVER extends ENV_PUBLIC {
       (ENV_PUBLIC.IS_DEV ) ? process.env.SERVER_NODE_URL_DEV :
       (ENV_PUBLIC.IS_QA  ) ? process.env.SERVER_NODE_URL_QA :
       (ENV_PUBLIC.IS_PROD) ? process.env.SERVER_NODE_URL_PROD :
-      null
+      (process.env.SERVER_NODE_URL ?? null)
     )) as string;
 
   ////////////////////////////////////////////////////////////////////////
@@ -53,10 +53,25 @@ export default class ENV_SERVER extends ENV_PUBLIC {
       const missing = Object.keys(variables).filter((key) => isNullish(variables[key])).filter((key) => !key.toLowerCase().startsWith("nullable_"));
     
       if (missing.length > 0) {
-        throw new Error(".env.local.local에 환경변수를 추가해주세요 : " + missing.join(", "));
+        throw new Error(".env.local에 환경변수를 추가해주세요 : " + missing.join(", "));
       }
       ENV_SERVER.is_ENV_SERVER_init = true;
   
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  // toObject Area
+  static toObject(): { [key: string]: any } {
+    const obj: { [key: string]: any } = ENV_PUBLIC.toObject();
+    
+    Object.getOwnPropertyNames(this).forEach((key) => {
+      const value = this[key as keyof typeof ENV_SERVER];
+      if (typeof value === "string") {
+        obj[key] = value;
+      }
+    });
+    
+    return obj;
   }
 }
 ENV_SERVER.init_ENV_SERVER();

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "utils:update": "npm uninstall -D git+https://github.com/vrap-stan/vrutils.git && npm i -D git+https://github.com/vrap-stan/vrutils.git",
-    "env": "vrutils buildenv transpile",
+    "env": "envclass --transpile",
     "lint": "next lint"
   },
   "dependencies": {
@@ -18,6 +18,7 @@
     "@mui/icons-material": "^5.16.7",
     "@mui/material": "^5.16.7",
     "@mui/material-nextjs": "^5.16.6",
+    "@react-three/fiber": "^8.17.8",
     "@sentry/nextjs": "^8.26.0",
     "@stomp/stompjs": "^7.0.0",
     "axios": "^1.7.5",
@@ -36,6 +37,7 @@
     "three": "^0.168.0"
   },
   "devDependencies": {
+    "@iamjam/envclass": "^0.2.9",
     "@types/node": "^20",
     "@types/pako": "^2.0.3",
     "@types/react": "^18",
@@ -43,7 +45,6 @@
     "@types/socket.io-client": "^3.0.0",
     "@types/sockjs-client": "^1.5.4",
     "@types/three": "^0.168.0",
-    "typescript": "^5",
-    "vrutils": "github:vrap-stan/vrutils"
+    "typescript": "^5"
   }
 }

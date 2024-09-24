@@ -5,8 +5,7 @@ export default class ENV_PUBLIC {
   ////////////////////////////////////////////////////////////////////////
   // ENV Area
   static DST_ENV =
-    (process.env.NEXT_PUBLIC_VRAP_ENV ?? 
-			process.env.NEXT_PUBLIC_ENVIRONMENT ?? 
+    (process.env.NEXT_PUBLIC_ENVIRONMENT ?? 
 			process.env.NEXT_PUBLIC_VERCEL_ENV ?? 
 			process.env.NODE_ENV) as string;
   static IS_DEV = (["development","dev","d"].includes(
@@ -38,7 +37,7 @@ export default class ENV_PUBLIC {
       (ENV_PUBLIC.IS_DEV ) ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_DEV :
       (ENV_PUBLIC.IS_QA  ) ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_QA :
       (ENV_PUBLIC.IS_PROD) ? process.env.NEXT_PUBLIC_WEBSOCKET_URL_PROD :
-      null
+      (process.env.NEXT_PUBLIC_WEBSOCKET_URL ?? null)
     )) as string;
 
   ////////////////////////////////////////////////////////////////////////
@@ -72,10 +71,25 @@ export default class ENV_PUBLIC {
       const missing = Object.keys(variables).filter((key) => isNullish(variables[key])).filter((key) => !key.toLowerCase().startsWith("nullable_"));
     
       if (missing.length > 0) {
-        throw new Error(".env.local.local에 환경변수를 추가해주세요 : " + missing.join(", "));
+        throw new Error(".env.local에 환경변수를 추가해주세요 : " + missing.join(", "));
       }
       ENV_PUBLIC.is_ENV_PUBLIC_init = true;
   
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  // toObject Area
+  static toObject(): { [key: string]: any } {
+    const obj: { [key: string]: any } = {};
+    
+    Object.getOwnPropertyNames(this).forEach((key) => {
+      const value = this[key as keyof typeof ENV_PUBLIC];
+      if (typeof value === "string") {
+        obj[key] = value;
+      }
+    });
+    
+    return obj;
   }
 }
 ENV_PUBLIC.init_ENV_PUBLIC();
