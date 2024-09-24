@@ -14,7 +14,7 @@ import SockJS from "sockjs-client";
 import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
 
 interface SocketContextType {
-  connect: (token: string) => void;
+  connect: (token: string) => boolean;
   disconnect: () => void;
   isConnected: boolean;
   socket: MutableRefObject<Client | null>;
@@ -46,16 +46,23 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const socketRef = useRef<Client | null>(null);
 
   const connect = (token: string) => {
-    if (socketRef.current) return;
+    if (socketRef.current) {
+      return socketRef.current?.active;
+    }
     const socket = new SockJS(ENV_PUBLIC.NEXT_PUBLIC_WEBSOCKET_URL);
     const stompClient = Stomp.over(() => socket);
+    stompClient.debug = (msg) => {
+      console.log(msg);
+    };
 
+    // let suc = false;
     stompClient.connect(
       {
         Authorization: token,
       },
       () => {
         setIsConnected(true);
+        // suc = true;
       },
       (err) => {
         console.log("websocket Error, ", err);
@@ -63,24 +70,26 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         if (err.body === "유효하지 않은 권한입니다.") {
           alert("subscribe 에러 발생");
         }
+        // suc = false;
       },
       () => {
         setIsConnected(false);
         console.log("websocket Closed");
+        // suc = false;
       }
     );
 
     stompClient.activate();
     socketRef.current = stompClient;
 
-    return stompClient;
+    return stompClient?.active;
   };
 
   const disconnect = () => {
     if (socketRef.current) {
       socketRef.current.deactivate();
-      socketRef.current = null;
     }
+    socketRef.current = null;
   };
 
   useEffect(() => {

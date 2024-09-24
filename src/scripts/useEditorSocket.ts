@@ -35,7 +35,7 @@ export default function useEditorSocket() {
     if (!socket) {
       return;
     }
-    socket.subscribe(`/sub/editor/${uuid}/haha`, (msg) => {
+    socket.subscribe(`/sub/editor/${uuid}`, (msg) => {
       // console.log("received From sub : ", msg);
       setEditorData((prev: { id: string }[]) => {
         const copied = [...prev];
@@ -66,7 +66,7 @@ export default function useEditorSocket() {
     };
     const body = JSON.stringify(sendData);
     socket.publish({
-      destination: `/pub/editor/${uuid}/haha`,
+      destination: `/pub/editor/${uuid}`,
       body,
     });
   };
