@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useSocket } from "./SocketProvider";
+import { compressData } from "./utils";
 
 const EDITOR_CHANNEL_PREFIX = "/sub/editor/" as const;
-const CAMERA_CHANNEL_PREFIX = `${EDITOR_CHANNEL_PREFIX}camera-` as const;
+const EDITOR_CAMERA_CHANNEL_PREFIX = `${EDITOR_CHANNEL_PREFIX}camera/` as const;
+const EDITOR_DATA_CHANNEL_PREFIX = `${EDITOR_CHANNEL_PREFIX}data/` as const;
+const EDITOR_REVIEW_CHANNEL_PREFIX = `${EDITOR_CHANNEL_PREFIX}review/` as const;
 
 export default function useEditorSocket() {
   const socketExports = useSocket();
@@ -18,7 +21,7 @@ export default function useEditorSocket() {
     if (!socket) {
       return;
     }
-    socket.subscribe(`${CAMERA_CHANNEL_PREFIX}${uuid}`, (msg) => {
+    socket.subscribe(`${EDITOR_CAMERA_CHANNEL_PREFIX}${uuid}`, (msg) => {
       setCameraData((prev: { id: string }[]) => {
         const copied = [...prev];
         const body = JSON.parse(msg.body).data as { id: string };
@@ -33,7 +36,10 @@ export default function useEditorSocket() {
   const subscribeEditor = (uuid: string) => {
     const socket = socketRef?.current;
     if (!socket) {
-      return;
+      return false;
+    }
+    if (!socket.active) {
+      return false;
     }
     socket.subscribe(`/sub/editor/${uuid}`, (msg) => {
       // console.log("received From sub : ", msg);
@@ -47,6 +53,7 @@ export default function useEditorSocket() {
     });
     connectedUuid.current = uuid;
     setEditorSubscribed(true);
+    return true;
   };
 
   const publishEditor = (data: any) => {
@@ -64,7 +71,12 @@ export default function useEditorSocket() {
       type: "arbitrary",
       data: { ...data },
     };
-    const body = JSON.stringify(sendData);
+
+    const source = JSON.stringify(sendData);
+    // const body = compressData(source).toString();
+    const body = source;
+    // console.log("Source : ", source.length, "Compressed : ", body.length);
+    // console.log(body);
     socket.publish({
       destination: `/pub/editor/${uuid}`,
       body,

@@ -1,86 +1,11 @@
-// import { useSocket } from "@/src/scripts/SocketProvider";
-// import useEditorSocket from "@/src/scripts/useEditorSocket";
-// import { GetServerSidePropsContext } from "next";
-// import Link from "next/link";
-
-// function Editor({ myId, projectId }: { myId: string; projectId: string }) {
-//   const {
-//     isConnected,
-//     subscribeEditor,
-//     editorSubscribed,
-//     publishEditor,
-//     editorData,
-//   } = useEditorSocket();
-
-//   return (
-//     <div>
-//       Editor Inside - My Id : {myId}
-//       <div>isConnected : {isConnected ? "true" : "false"}</div>
-//       <button
-//         onClick={() => {
-//           subscribeEditor(projectId);
-//         }}
-//       >
-//         Subscribe to {projectId}
-//       </button>
-//       <div>editorSubscribed: {editorSubscribed ? "true" : "false"}</div>
-//       <div>
-//         <button
-//           onClick={() => {
-//             publishEditor({ x: 100, y: 200 });
-//           }}
-//         >
-//           Publish
-//         </button>
-//       </div>
-//       <div>
-//         {editorData.map((data, i) => (
-//           <div key={i}>{JSON.stringify(data)}</div>
-//         ))}
-//       </div>
-//       <Link href={`/editor`}>Back to editor main</Link>
-//     </div>
-//   );
-// }
-
 import { Canvas } from "@react-three/fiber";
-import {
-  Stats,
-  OrbitControls,
-  OrbitControlsProps,
-  Sphere,
-} from "@react-three/drei";
-import {
-  Euler,
-  Matrix4,
-  Quaternion,
-  Vector3,
-  VectorKeyframeTrack,
-} from "three";
-import { useRef, useState } from "react";
+import { OrbitControls, OrbitControlsProps, Sphere } from "@react-three/drei";
+import { Euler, Matrix4, Quaternion, Vector3 } from "three";
+import { useEffect, useRef, useState } from "react";
 import useEditorSocket from "@/src/scripts/useEditorSocket";
 import Link from "next/link";
 import { GetServerSidePropsContext } from "next";
-import ObjectViewer from "@/src/components/ObjectViewer";
-
-const defaultUsers = [
-  {
-    camera: new Matrix4()
-      .identity()
-      .makeRotationFromEuler(new Euler(45, 0, 0))
-      .makeTranslation(0, 0, 1),
-    name: "user1",
-    color: "#ff0000",
-  },
-  {
-    camera: new Matrix4()
-      .identity()
-      .makeRotationFromEuler(new Euler(0, 45, 70))
-      .makeTranslation(0, 0.5, 0),
-    name: "user2",
-    color: "#00ff00",
-  },
-];
+import { useRouter } from "next/router";
 
 // random color from string
 const randomColorFromString = (str: string) => {
@@ -126,17 +51,23 @@ export default function Editor({
     publishEditor,
     editorData,
   } = useEditorSocket();
+  const router = useRouter();
 
-  const [users, setUsers] = useState([...defaultUsers]);
   const lastSent = useRef(0);
+
+  useEffect(() => {
+    const suc = subscribeEditor(projectId);
+    if (!suc) {
+      alert("subscribe 실패");
+    }
+  }, []);
 
   if (!isConnected) {
     return (
       <div>
-        Not connected
-        <div>
-          <Link href="/editor">Back to Editor</Link>
-        </div>
+        Not Connected
+        <br></br>
+        <Link href="/editor">Back to connect</Link>
       </div>
     );
   }
@@ -145,6 +76,7 @@ export default function Editor({
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <div
         style={{
+          display: true ? "none" : "",
           position: "absolute",
           top: 0,
           left: 0,
@@ -284,18 +216,89 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
   const euler = new Euler().setFromQuaternion(rotationQuaternion);
 
   return (
-    <line ref={theRef} position={position.toArray()} rotation={euler.toArray()}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          array={new Float32Array([0, 0, 0, 0, 0, -1])} // Start at (0,0,0) and go to (0,0,1)
-          itemSize={3}
-          count={2}
-        />
-      </bufferGeometry>
-      <Sphere args={[0.2, 16, 16]} />
-      <lineBasicMaterial color={color} />
-    </line>
+    <>
+      <line
+        ref={theRef}
+        position={position.toArray()}
+        rotation={euler.toArray()}
+      >
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            array={new Float32Array([0, 0, 0, 0.35, 0.35, -1])}
+            itemSize={3}
+            count={2}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={color} />
+        <Sphere args={[0.05, 16, 16]} />
+      </line>
+      <line
+        ref={theRef}
+        position={position.toArray()}
+        rotation={euler.toArray()}
+      >
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            array={new Float32Array([0, 0, 0, 0.35, -0.35, -1])}
+            itemSize={3}
+            count={2}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={color} />
+      </line>
+      <line
+        ref={theRef}
+        position={position.toArray()}
+        rotation={euler.toArray()}
+      >
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            array={new Float32Array([0, 0, 0, -0.35, 0.35, -1])}
+            itemSize={3}
+            count={2}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={color} />
+      </line>
+      <line
+        ref={theRef}
+        position={position.toArray()}
+        rotation={euler.toArray()}
+      >
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            array={new Float32Array([0, 0, 0, -0.35, -0.35, -1])}
+            itemSize={3}
+            count={2}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={color} />
+      </line>
+      <line
+        ref={theRef}
+        position={position.toArray()}
+        rotation={euler.toArray()}
+      >
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            array={
+              new Float32Array([
+                0.35, -0.35, -1, 0.35, 0.35, -1, -0.35, 0.35, -1, -0.35, -0.35,
+                -1, 0.35, -0.35, -1,
+              ])
+            }
+            itemSize={3}
+            count={5}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={color} />
+      </line>
+    </>
   );
   // return (
   //   <>
@@ -337,7 +340,7 @@ const SharedCanvas = ({
       })}
       {/* basic cube */}
       <mesh>
-        <boxGeometry args={[0.1, 0.1, 0.1]} />
+        <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="hotpink" />
       </mesh>
       <ambientLight intensity={0.1} />

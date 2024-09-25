@@ -1,4 +1,3 @@
-import { createSocket } from "dgram";
 import React, {
   createContext,
   MutableRefObject,
@@ -7,21 +6,17 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { io, Socket } from "socket.io-client";
 import { compressData } from "./utils";
 import { Client, Stomp } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
 
 interface SocketContextType {
-  connect: (token: string) => boolean;
+  connect: (token: string) => Promise<boolean>;
   disconnect: () => void;
   isConnected: boolean;
   socket: MutableRefObject<Client | null>;
 }
-
-// server/websocket_test 참조
-const WEBSOCKET_URL = "http://localhost:8080";
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
@@ -33,52 +28,52 @@ export const useSocket = () => {
   return context;
 };
 
-type User = {
-  name: string;
-  x: number;
-  y: number;
-};
-
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Client | null>(null);
 
-  const connect = (token: string) => {
+  const connect = async (token: string) => {
     if (socketRef.current) {
       return socketRef.current?.active;
     }
     const socket = new SockJS(ENV_PUBLIC.NEXT_PUBLIC_WEBSOCKET_URL);
     const stompClient = Stomp.over(() => socket);
     stompClient.debug = (msg) => {
-      console.log(msg);
+      // console.log(msg);
     };
 
     // let suc = false;
-    stompClient.connect(
-      {
-        Authorization: token,
-      },
-      () => {
-        setIsConnected(true);
-        // suc = true;
-      },
-      (err) => {
-        console.log("websocket Error, ", err);
-        setIsConnected(false);
-        if (err.body === "유효하지 않은 권한입니다.") {
-          alert("subscribe 에러 발생");
+    stompClient.activate();
+    const connectPromise = new Promise<boolean>((resolve, reject) => {
+      stompClient.connect(
+        {
+          Authorization: token,
+        },
+        () => {
+          setIsConnected(true);
+          resolve(true);
+        },
+        (err) => {
+          console.log("websocket Error, ", err);
+          setIsConnected(false);
+          if (err.body === "유효하지 않은 권한입니다.") {
+            alert("subscribe 에러 발생");
+          }
+          resolve(false);
+        },
+        () => {
+          setIsConnected(false);
+          console.log("websocket Closed");
+          resolve(false);
         }
-        // suc = false;
-      },
-      () => {
-        setIsConnected(false);
-        console.log("websocket Closed");
-        // suc = false;
-      }
-    );
-
+      );
+    });
+    const result = await connectPromise;
+    if (!result) {
+      return false;
+    }
     stompClient.activate();
     socketRef.current = stompClient;
 
@@ -87,6 +82,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const disconnect = () => {
     if (socketRef.current) {
+      console.log("Deactivatedx");
       socketRef.current.deactivate();
     }
     socketRef.current = null;
