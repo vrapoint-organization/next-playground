@@ -1,8 +1,6 @@
-import { useSocket } from "@/src/scripts/SocketProvider";
 import useEditorSocket from "@/src/scripts/useEditorSocket";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
 
 function Editor({ myId }: { myId: string }) {
   const { connect, isConnected } = useEditorSocket();

@@ -17,14 +17,14 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// scripts/server/ENV_SERVER.ts
+// src/serverscripts/ENV_SERVER.ts
 var ENV_SERVER_exports = {};
 __export(ENV_SERVER_exports, {
   default: () => ENV_SERVER
 });
 module.exports = __toCommonJS(ENV_SERVER_exports);
 
-// scripts/client/ENV_PUBLIC.ts
+// src/scripts/ENV_PUBLIC.ts
 var _a, _b, _c;
 var _ENV_PUBLIC = class _ENV_PUBLIC {
   ////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ _ENV_PUBLIC.init_ENV_PUBLIC = () => {
 var ENV_PUBLIC = _ENV_PUBLIC;
 ENV_PUBLIC.init_ENV_PUBLIC();
 
-// scripts/server/ENV_SERVER.ts
+// src/serverscripts/ENV_SERVER.ts
 var _ENV_SERVER = class _ENV_SERVER extends ENV_PUBLIC {
   ////////////////////////////////////////////////////////////////////////
   // toObject Area

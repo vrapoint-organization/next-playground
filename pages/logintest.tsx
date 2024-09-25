@@ -1,4 +1,4 @@
-import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
+import ENV_PUBLIC from "@/src/scripts/ENV_PUBLIC";
 import ObjectViewer from "@/src/components/ObjectViewer";
 import { translateAndUserCheck } from "@/src/serverscripts/serverutils";
 import { deleteCookie, getCookie } from "cookies-next";

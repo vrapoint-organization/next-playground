@@ -1,4 +1,4 @@
-import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
+import ENV_PUBLIC from "@/src/scripts/ENV_PUBLIC";
 import fetcher from "./fetcher";
 import IError from "./IError";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";

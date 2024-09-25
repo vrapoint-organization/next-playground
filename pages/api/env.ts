@@ -1,5 +1,5 @@
-import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
-import ENV_SERVER from "@/scripts/server/ENV_SERVER";
+import ENV_PUBLIC from "@/src/scripts/ENV_PUBLIC";
+import ENV_SERVER from "@/src/serverscripts/ENV_SERVER";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 type Data = {

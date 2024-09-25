@@ -1,4 +1,4 @@
-import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
+import ENV_PUBLIC from "@/src/scripts/ENV_PUBLIC";
 import ObjectViewer from "@/src/components/ObjectViewer";
 import fetcher from "@/src/scripts/fetcher";
 import { getCookie, setCookie } from "cookies-next";

@@ -17,7 +17,7 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// scripts/client/ENV_PUBLIC.ts
+// src/scripts/ENV_PUBLIC.ts
 var ENV_PUBLIC_exports = {};
 __export(ENV_PUBLIC_exports, {
   default: () => ENV_PUBLIC

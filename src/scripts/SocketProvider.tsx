@@ -9,7 +9,7 @@ import React, {
 import { compressData } from "./utils";
 import { Client, Stomp } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
+import ENV_PUBLIC from "@/src/scripts/ENV_PUBLIC";
 
 interface SocketContextType {
   connect: (token: string) => Promise<boolean>;

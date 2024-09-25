@@ -7,9 +7,9 @@
   ],
   "publicFileName": "ENV_PUBLIC",
   "privateFileName": "ENV_SERVER",
-  "publicFileDirPath": "./scripts/client",
-  "publicImportDirPath": "../client",
-  "privateFileDirPath": "./scripts/server",
+  "publicFileDirPath": "./src/scripts",
+  "publicImportDirPath": "../scripts",
+  "privateFileDirPath": "./src/serverscripts",
   "searchThrough": [
     ".env.local",
     ".env"

@@ -1,5 +1,10 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, OrbitControlsProps, Sphere } from "@react-three/drei";
+import {
+  OrbitControls,
+  OrbitControlsChangeEvent,
+  OrbitControlsProps,
+  Sphere,
+} from "@react-three/drei";
 import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { useEffect, useRef, useState } from "react";
 import useEditorSocket from "@/src/scripts/useEditorSocket";
@@ -44,22 +49,38 @@ export default function Editor({
   myId: string;
   projectId: string;
 }) {
-  const {
-    isConnected,
-    subscribeEditor,
-    editorSubscribed,
-    publishEditor,
-    editorData,
-  } = useEditorSocket();
-  const router = useRouter();
+  const { isConnected, subscribeCamera, editorSubscribed, publishCamera } =
+    useEditorSocket();
+  const [cameras, setCameras] = useState<any[]>([]);
 
   const lastSent = useRef(0);
+  const functions = {
+    onCameraChange: (e?: OrbitControlsChangeEvent) => {
+      const mat = e?.target.object.matrix.toArray();
+      const now = Date.now();
+      const canSend = now - lastSent.current > 100;
+      // const canSend = true;
+      if (canSend) {
+        lastSent.current = now;
+        publishCamera({
+          id: myId,
+          matrix: mat,
+        });
+      }
+    },
+  };
 
   useEffect(() => {
-    const suc = subscribeEditor(projectId);
-    if (!suc) {
-      alert("subscribe 실패");
-    }
+    subscribeCamera(projectId, (data) => {
+      // console.log(data);
+      setCameras((prev) => {
+        const copied = [...prev];
+        const body = data;
+        const retval = copied.filter((d) => d.id !== body.id);
+        retval.push(body);
+        return retval;
+      });
+    });
   }, []);
 
   if (!isConnected) {
@@ -76,129 +97,22 @@ export default function Editor({
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
       <div
         style={{
-          display: true ? "none" : "",
+          display: true ? "" : "none",
           position: "absolute",
-          top: 0,
-          left: 0,
-          backgroundColor: "#999999",
+          right: 0,
+          bottom: 0,
+          backgroundColor: "#d0d0d0",
           zIndex: 100,
         }}
       >
         ControlPanel
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <button
-            onClick={() => {
-              setUsers((prev) => {
-                const copied = [...prev];
-                const prevcam = copied
-                  .find((user) => user.name === "user1")!
-                  .camera.clone();
-                const prevPosition = new Vector3();
-                prevcam.decompose(
-                  prevPosition,
-                  new Quaternion(),
-                  new Vector3()
-                );
-                prevcam.makeTranslation(
-                  prevPosition.x + 0.05,
-                  prevPosition.y,
-                  prevPosition.z
-                );
-                copied.find((user) => user.name === "user1")!.camera = prevcam;
-                const printTrans = (mat: Matrix4, label?: string) => {
-                  const pos = new Vector3();
-                  mat.decompose(pos, new Quaternion(), new Vector3());
-                  console.log(label ?? "", pos.toArray());
-                };
-                // printTrans(
-                //   prev.find((user) => user.name === "user1")!.camera,
-                //   "prevPosition"
-                // );
-                // printTrans(
-                //   copied.find((user) => user.name === "user1")!.camera,
-                //   "newPosition"
-                // );
-                return copied;
-              });
-            }}
-          >
-            Move User1
-          </button>
-          <button
-            onClick={() => {
-              setUsers((prev) => {
-                const copied = [...prev];
-                const prevcam = copied
-                  .find((user) => user.name === "user2")!
-                  .camera.clone();
-                const prevPosition = new Vector3();
-                prevcam.decompose(
-                  prevPosition,
-                  new Quaternion(),
-                  new Vector3()
-                );
-                prevcam.makeTranslation(
-                  prevPosition.x,
-                  prevPosition.y + 0.05,
-                  prevPosition.z
-                );
-                copied.find((user) => user.name === "user2")!.camera = prevcam;
-                const printTrans = (mat: Matrix4, label?: string) => {
-                  const pos = new Vector3();
-                  mat.decompose(pos, new Quaternion(), new Vector3());
-                  console.log(label ?? "", pos.toArray());
-                };
-                // printTrans(
-                //   prev.find((user) => user.name === "user2")!.camera,
-                //   "prevPosition"
-                // );
-                // printTrans(
-                //   copied.find((user) => user.name === "user2")!.camera,
-                //   "newPosition"
-                // );
-                return copied;
-              });
-            }}
-          >
-            Move User2
-          </button>
-          <button
-            onClick={() => {
-              subscribeEditor(projectId);
-            }}
-          >
-            subscribeEditor {editorSubscribed ? "Subscribed" : ""}
-          </button>
-          {editorSubscribed && (
-            <button
-              onClick={() => {
-                publishEditor({ x: 100, y: 200 });
-              }}
-            >
-              Publish
-            </button>
-          )}
-          {/* <ObjectViewer objectData={editorData}></ObjectViewer> */}
+          <div>Editor sub:{editorSubscribed ? "true" : "false"}</div>
         </div>
       </div>
       <SharedCanvas
-        users={refineEditorData(myId, editorData)}
-        onCameraChange={(e) => {
-          // const t = new Vector3();
-          // e?.target.object.position
-          // console.log(e?.target.object.position);
-          const mat = e?.target.object.matrix.toArray();
-          const now = Date.now();
-          // const canSend = now - lastSent.current > 100;
-          const canSend = true;
-          if (canSend) {
-            lastSent.current = now;
-            publishEditor({
-              id: myId,
-              matrix: mat,
-            });
-          }
-        }}
+        users={refineEditorData(myId, cameras)}
+        onCameraChange={functions.onCameraChange}
       ></SharedCanvas>
     </div>
   );

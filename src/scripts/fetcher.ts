@@ -1,4 +1,4 @@
-import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
+import ENV_PUBLIC from "@/src/scripts/ENV_PUBLIC";
 import ax, { AxiosResponse } from "axios";
 import { getCookie, setCookie } from "cookies-next";
 import IError from "./IError";

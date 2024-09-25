@@ -1,6 +1,6 @@
 
 /* DO NOT EDIT! THIS IS AUTO-GENERATED FILE */
-import ENV_PUBLIC from "./../client/ENV_PUBLIC"
+import ENV_PUBLIC from "./../scripts/ENV_PUBLIC"
 export default class ENV_SERVER extends ENV_PUBLIC {
   
   ////////////////////////////////////////////////////////////////////////

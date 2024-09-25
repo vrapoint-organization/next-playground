@@ -1,4 +1,4 @@
-import ENV_SERVER from "@/scripts/server/ENV_SERVER";
+import ENV_SERVER from "@/src/serverscripts/ENV_SERVER";
 import { deleteCookie, getCookie, setCookie } from "cookies-next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { GetServerSidePropsContext } from "next/types";

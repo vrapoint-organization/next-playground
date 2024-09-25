@@ -16,24 +16,11 @@ export default function useEditorSocket() {
   const [cameraData, setCameraData] = useState<any[]>([]);
   const [editorData, setEditorData] = useState<any[]>([]);
 
-  const subscribeCamera = (uuid: string) => {
-    const socket = socketRef?.current;
-    if (!socket) {
-      return;
-    }
-    socket.subscribe(`${EDITOR_CAMERA_CHANNEL_PREFIX}${uuid}`, (msg) => {
-      setCameraData((prev: { id: string }[]) => {
-        const copied = [...prev];
-        const body = JSON.parse(msg.body).data as { id: string };
-        const retval = copied.filter((d) => d.id !== body.id).push(body);
-        return retval;
-      });
-    });
-    connectedUuid.current = uuid;
-    setEditorSubscribed(true);
-  };
-
-  const subscribeEditor = (uuid: string) => {
+  const subscribeCamera = (
+    uuid: string,
+    onDataReceive?: (data: any) => void,
+    onError?: (err: any) => void
+  ) => {
     const socket = socketRef?.current;
     if (!socket) {
       return false;
@@ -43,20 +30,29 @@ export default function useEditorSocket() {
     }
     socket.subscribe(`/sub/editor/${uuid}`, (msg) => {
       // console.log("received From sub : ", msg);
-      setEditorData((prev: { id: string }[]) => {
-        const copied = [...prev];
-        const body = JSON.parse(msg.body).data as { id: string };
-        const retval = copied.filter((d) => d.id !== body.id);
-        retval.push(body);
-        return retval;
-      });
+      let data = null;
+      try {
+        data = JSON.parse(msg.body).data;
+      } catch (err) {
+        console.error("subscribeEditor ", err);
+        onError?.(err);
+        return;
+      }
+      onDataReceive?.(data);
+      // setEditorData((prev: { id: string }[]) => {
+      //   const copied = [...prev];
+      //   const body = JSON.parse(msg.body).data as { id: string };
+      //   const retval = copied.filter((d) => d.id !== body.id);
+      //   retval.push(body);
+      //   return retval;
+      // });
     });
     connectedUuid.current = uuid;
     setEditorSubscribed(true);
     return true;
   };
 
-  const publishEditor = (data: any) => {
+  const publishCamera = (data: any) => {
     const socket = socketRef?.current;
     if (!socket) {
       return;
@@ -103,9 +99,9 @@ export default function useEditorSocket() {
   }, []);
   return {
     ...socketExports,
-    subscribeEditor,
+    subscribeCamera,
     unsubscribeEditor,
-    publishEditor,
+    publishCamera,
     editorSubscribed,
     editorData,
   };
