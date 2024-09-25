@@ -70,7 +70,7 @@ export function serverSideUserCheck<T = any>(
     // case 2.
     // 액세스토큰으로 유저정보 가져오기
     if (accessToken) {
-      const userInfoUrl = ENV_SERVER.SERVER_URL + "api/v2/s/user/info";
+      const userInfoUrl = ENV_SERVER.SERVER_SPRING_URL + "api/v2/s/user/info";
       const userDataByAccessToken = await fetch(userInfoUrl, {
         headers: {
           USER_AUTH_TOKEN: `bearer ${accessToken}`,
@@ -102,7 +102,7 @@ export function serverSideUserCheck<T = any>(
     }
 
     // case 3. 액세스토큰 없거나 만료인 경우 refreshToken으로 재발급
-    const refreshUrl = ENV_SERVER.SERVER_URL + "api/v2/s/auth/refresh";
+    const refreshUrl = ENV_SERVER.SERVER_SPRING_URL + "api/v2/s/auth/refresh";
     const userDataByRefreshToken = await fetch(refreshUrl, {
       method: "POST",
       headers: {

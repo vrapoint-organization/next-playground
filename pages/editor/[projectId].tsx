@@ -8,9 +8,14 @@ import {
 import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { useEffect, useRef, useState } from "react";
 import useEditorSocket from "@/src/scripts/useEditorSocket";
-import Link from "next/link";
 import { GetServerSidePropsContext } from "next";
-import { useRouter } from "next/router";
+import styled from "@emotion/styled";
+import LeftPanel from "@/src/components/editor/LeftPanel";
+import RightPanel from "@/src/components/editor/RightPanel";
+import { Provider, useAtom, useSetAtom } from "jotai";
+import { camerasAtom, editorStore } from "@/src/jotai/editor";
+import { CameraAtomType } from "@/types/EditorType";
+import Link from "next/link";
 
 // random color from string
 const randomColorFromString = (str: string) => {
@@ -25,12 +30,21 @@ const randomColorFromString = (str: string) => {
 
 const refineEditorData = (
   myId: string,
-  data: { id: string; matrix: number[] }[]
+  data: { id: string; matrix: number[] | Matrix4 }[]
 ) => {
   // console.log(data);
   return data
     .filter((d) => d.id !== myId)
     .map((d) => {
+      if (d.matrix instanceof Matrix4) {
+        return {
+          camera: d.matrix,
+          name: d.id,
+          color: randomColorFromString(d.id),
+          id: d.id,
+        };
+      }
+
       const mat = new Matrix4();
       mat.fromArray(d.matrix);
       return {
@@ -51,7 +65,8 @@ export default function Editor({
 }) {
   const { isConnected, subscribeCamera, editorSubscribed, publishCamera } =
     useEditorSocket();
-  const [cameras, setCameras] = useState<any[]>([]);
+  const [cameras, setCameras] = useAtom(camerasAtom);
+  // const setCameras = useSetAtom(camerasAtom);
 
   const lastSent = useRef(0);
   const functions = {
@@ -73,12 +88,13 @@ export default function Editor({
   useEffect(() => {
     subscribeCamera(projectId, (data) => {
       // console.log(data);
-      setCameras((prev) => {
-        const copied = [...prev];
+      setCameras((prev: CameraAtomType) => {
+        const copied = { ...prev };
         const body = data;
-        const retval = copied.filter((d) => d.id !== body.id);
+        const retval = copied.cameras.filter((d) => d.id !== body.id);
         retval.push(body);
-        return retval;
+        copied.cameras = retval;
+        return copied;
       });
     });
   }, []);
@@ -94,10 +110,17 @@ export default function Editor({
   }
 
   return (
+    // <Provider store={editorStore}>
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
+      <EditorCanvas
+        users={refineEditorData(myId, cameras.cameras)}
+        onCameraChange={functions.onCameraChange}
+      ></EditorCanvas>
+      <LeftPanel></LeftPanel>
+      <RightPanel></RightPanel>
       <div
         style={{
-          display: true ? "" : "none",
+          display: true ? "inherit" : "none",
           position: "absolute",
           right: 0,
           bottom: 0,
@@ -110,11 +133,8 @@ export default function Editor({
           <div>Editor sub:{editorSubscribed ? "true" : "false"}</div>
         </div>
       </div>
-      <SharedCanvas
-        users={refineEditorData(myId, cameras)}
-        onCameraChange={functions.onCameraChange}
-      ></SharedCanvas>
     </div>
+    // </Provider>
   );
 }
 
@@ -131,11 +151,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
 
   return (
     <>
-      <line
-        ref={theRef}
-        position={position.toArray()}
-        rotation={euler.toArray()}
-      >
+      <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -147,11 +163,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         <lineBasicMaterial color={color} />
         <Sphere args={[0.05, 16, 16]} />
       </line>
-      <line
-        ref={theRef}
-        position={position.toArray()}
-        rotation={euler.toArray()}
-      >
+      <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -162,11 +174,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         </bufferGeometry>
         <lineBasicMaterial color={color} />
       </line>
-      <line
-        ref={theRef}
-        position={position.toArray()}
-        rotation={euler.toArray()}
-      >
+      <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -177,11 +185,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         </bufferGeometry>
         <lineBasicMaterial color={color} />
       </line>
-      <line
-        ref={theRef}
-        position={position.toArray()}
-        rotation={euler.toArray()}
-      >
+      <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -192,11 +196,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         </bufferGeometry>
         <lineBasicMaterial color={color} />
       </line>
-      <line
-        ref={theRef}
-        position={position.toArray()}
-        rotation={euler.toArray()}
-      >
+      <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -217,7 +217,6 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
   // return (
   //   <>
   //     <mesh
-  //       ref={theRef}
   //       position={position.toArray()}
   //       rotation={euler.toArray()} // 쿼터니언을 받지 않는다
   //     >
@@ -229,7 +228,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
   // );
 }
 
-const SharedCanvas = ({
+const EditorCanvas = ({
   users,
   onCameraChange,
 }: {
