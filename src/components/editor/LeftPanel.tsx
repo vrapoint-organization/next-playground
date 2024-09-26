@@ -6,14 +6,14 @@ import { Matrix4, Quaternion, Vector3 } from "three";
 
 function LeftPanel() {
   const cameras = useAtomValue(camerasAtom);
-  console.log({ cameras });
-
+  //   console.log({ cameras });
+  console.log("LeftPanel");
   return (
     <Container>
       LeftPanel
       <div>
         {cameras.cameras.map((camera) => {
-          //   console.log({ camera, mat: camera.camera });
+          console.log("LeftPanelData:", { camera, mat: camera.camera });
           const pos = new Vector3();
           new Matrix4()
             .fromArray(camera.matrix)

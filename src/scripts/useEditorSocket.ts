@@ -28,7 +28,7 @@ export default function useEditorSocket() {
     if (!socket.active) {
       return false;
     }
-    socket.subscribe(`/sub/editor/${uuid}`, (msg) => {
+    socket.subscribe(`/sub/editor/${uuid}/flow`, (msg) => {
       // console.log("received From sub : ", msg);
       let data = null;
       try {
@@ -74,7 +74,7 @@ export default function useEditorSocket() {
     // console.log("Source : ", source.length, "Compressed : ", body.length);
     // console.log(body);
     socket.publish({
-      destination: `/pub/editor/${uuid}`,
+      destination: `/pub/editor/${uuid}/flow`,
       body,
     });
   };

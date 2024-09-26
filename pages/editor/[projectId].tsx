@@ -16,45 +16,7 @@ import { Provider, useAtom, useSetAtom } from "jotai";
 import { camerasAtom, editorStore } from "@/src/jotai/editor";
 import { CameraAtomType } from "@/types/EditorType";
 import Link from "next/link";
-
-// random color from string
-const randomColorFromString = (str: string) => {
-  return (
-    "#" +
-    str
-      .split("")
-      .reduce((acc, char) => char.charCodeAt(0) + acc, 0)
-      .toString(16)
-  );
-};
-
-const refineEditorData = (
-  myId: string,
-  data: { id: string; matrix: number[] | Matrix4 }[]
-) => {
-  // console.log(data);
-  return data
-    .filter((d) => d.id !== myId)
-    .map((d) => {
-      if (d.matrix instanceof Matrix4) {
-        return {
-          camera: d.matrix,
-          name: d.id,
-          color: randomColorFromString(d.id),
-          id: d.id,
-        };
-      }
-
-      const mat = new Matrix4();
-      mat.fromArray(d.matrix);
-      return {
-        camera: mat,
-        name: d.id,
-        color: randomColorFromString(d.id),
-        id: d.id,
-      };
-    });
-};
+import EditorCanvas from "@/src/components/editor/EditorCanvas";
 
 export default function Editor({
   myId,
@@ -63,8 +25,13 @@ export default function Editor({
   myId: string;
   projectId: string;
 }) {
-  const { isConnected, subscribeCamera, editorSubscribed, publishCamera } =
-    useEditorSocket();
+  const {
+    socket,
+    isConnected,
+    subscribeCamera,
+    editorSubscribed,
+    publishCamera,
+  } = useEditorSocket();
   const [cameras, setCameras] = useAtom(camerasAtom);
   // const setCameras = useSetAtom(camerasAtom);
 
@@ -85,19 +52,65 @@ export default function Editor({
     },
   };
 
+  const subDataUrl = `/user/sub/editor/${projectId}/data`;
+  const pubDataUrl = `/pub/editor/${projectId}/data`;
+  const subFlowUrl = `/sub/editor/${projectId}/flow`;
+  const pubFlowUrl = `/pub/editor/${projectId}/flow`;
   useEffect(() => {
-    subscribeCamera(projectId, (data) => {
-      // console.log(data);
-      setCameras((prev: CameraAtomType) => {
-        const copied = { ...prev };
-        const body = data;
-        const retval = copied.cameras.filter((d) => d.id !== body.id);
-        retval.push(body);
-        copied.cameras = retval;
-        return copied;
-      });
+    // subscribeCamera(projectId, (data) => {
+    //   console.log("Sub:", { data });
+    //   if (!data.matrix) {
+    //     console.error("No matrix data. Return");
+    //     return;
+    //   }
+    //   setCameras((prev: CameraAtomType) => {
+    //     const copied = { ...prev };
+    //     const body = data;
+    //     const retval = copied.cameras.filter((d) => d.id !== body.id);
+    //     retval.push(body);
+    //     copied.cameras = retval;
+    //     return copied;
+    //   });
+    // });
+
+    console.log("socket.current:", socket.current?.active);
+    const socketActive = socket.current && socket.current?.active;
+    if (!socketActive) {
+      console.log("socket is not active");
+      return;
+    }
+
+    console.log({ subUrl: subDataUrl, pubUrl: pubDataUrl });
+    socket.current.subscribe(subDataUrl, (data) => {
+      // debugger;
+      // console.log({ userSpecificData: data });
+      const obj = JSON.parse(data.body);
+      console.log({ obj });
     });
-  }, []);
+
+    socket.current.subscribe(subFlowUrl, (data) => {
+      // debugger;
+      // console.log({ userSpecificData: data });
+      const obj = JSON.parse(data.body);
+      console.log({ flowData: obj });
+    });
+
+    const body = JSON.stringify({
+      // type: "arbitrary",-
+      id: "some_id",
+      type: "REVIEW",
+
+      // data: { myRandomData: 1234 },
+    });
+    socket.current.publish({
+      destination: pubDataUrl,
+      body,
+    });
+    return () => {
+      socket.current?.unsubscribe(subDataUrl);
+      socket.current?.unsubscribe(subFlowUrl);
+    };
+  }, [isConnected]);
 
   if (!isConnected) {
     return (
@@ -112,10 +125,7 @@ export default function Editor({
   return (
     // <Provider store={editorStore}>
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
-      <EditorCanvas
-        users={refineEditorData(myId, cameras.cameras)}
-        onCameraChange={functions.onCameraChange}
-      ></EditorCanvas>
+      <EditorCanvas onCameraChange={functions.onCameraChange}></EditorCanvas>
       <LeftPanel></LeftPanel>
       <RightPanel></RightPanel>
       <div
@@ -131,138 +141,40 @@ export default function Editor({
         ControlPanel
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div>Editor sub:{editorSubscribed ? "true" : "false"}</div>
+          <div>
+            <button
+              onClick={() => {
+                socket.current?.publish({
+                  destination: pubDataUrl,
+                  body: JSON.stringify({
+                    id: "another_id",
+                    type: "REVIEW",
+                  }),
+                });
+              }}
+            >
+              Pub data
+            </button>
+            <button
+              onClick={() => {
+                socket.current?.publish({
+                  destination: pubFlowUrl,
+                  body: JSON.stringify({
+                    type: "arbitrary",
+                    data: { myRandomData: 1234 },
+                  }),
+                });
+              }}
+            >
+              Pub flow
+            </button>
+          </div>
         </div>
       </div>
     </div>
     // </Provider>
   );
 }
-
-function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
-  const theRef = useRef();
-
-  // Extract the translation vector (position) and rotation matrix (orientation)
-  const position = new Vector3();
-  const rotationQuaternion = new Quaternion();
-  matrix.decompose(position, rotationQuaternion, new Vector3(1, 1, 1));
-
-  // Get rotation in Euler angles from the rotation matrix
-  const euler = new Euler().setFromQuaternion(rotationQuaternion);
-
-  return (
-    <>
-      <line position={position.toArray()} rotation={euler.toArray()}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            array={new Float32Array([0, 0, 0, 0.35, 0.35, -1])}
-            itemSize={3}
-            count={2}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={color} />
-        <Sphere args={[0.05, 16, 16]} />
-      </line>
-      <line position={position.toArray()} rotation={euler.toArray()}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            array={new Float32Array([0, 0, 0, 0.35, -0.35, -1])}
-            itemSize={3}
-            count={2}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={color} />
-      </line>
-      <line position={position.toArray()} rotation={euler.toArray()}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            array={new Float32Array([0, 0, 0, -0.35, 0.35, -1])}
-            itemSize={3}
-            count={2}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={color} />
-      </line>
-      <line position={position.toArray()} rotation={euler.toArray()}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            array={new Float32Array([0, 0, 0, -0.35, -0.35, -1])}
-            itemSize={3}
-            count={2}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={color} />
-      </line>
-      <line position={position.toArray()} rotation={euler.toArray()}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            array={
-              new Float32Array([
-                0.35, -0.35, -1, 0.35, 0.35, -1, -0.35, 0.35, -1, -0.35, -0.35,
-                -1, 0.35, -0.35, -1,
-              ])
-            }
-            itemSize={3}
-            count={5}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={color} />
-      </line>
-    </>
-  );
-  // return (
-  //   <>
-  //     <mesh
-  //       position={position.toArray()}
-  //       rotation={euler.toArray()} // 쿼터니언을 받지 않는다
-  //     >
-  //       <tetrahedronGeometry args={[0.5]} /> {/* Radius 0.5 */}
-  //       <meshStandardMaterial color={color} />
-  //       <Sphere args={[0.2, 16, 16]} />
-  //     </mesh>
-  //   </>
-  // );
-}
-
-const EditorCanvas = ({
-  users,
-  onCameraChange,
-}: {
-  users: {
-    camera: Matrix4;
-    name: string;
-    color: string;
-    id: string;
-  }[];
-  onCameraChange: OrbitControlsProps["onChange"];
-}) => {
-  return (
-    <Canvas style={{ width: "100%", height: "100%" }}>
-      {users.map((user) => {
-        return (
-          <LineFromMatrix
-            matrix={user.camera}
-            color={user.color}
-            key={user.id}
-          ></LineFromMatrix>
-        );
-      })}
-      {/* basic cube */}
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="hotpink" />
-      </mesh>
-      <ambientLight intensity={0.1} />
-      <directionalLight position={[0, 0, 5]} color="red" />
-      <OrbitControls onChange={onCameraChange} />
-      {/* <Stats /> */}
-    </Canvas>
-  );
-};
 
 export const getServerSideProps = (ctx: GetServerSidePropsContext) => {
   const { query } = ctx;
