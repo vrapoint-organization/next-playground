@@ -16,11 +16,7 @@ const WebSocketClient = () => {
   const stompClientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   
-<<<<<<< Updated upstream
-  const sampleUUID = 'eqwe1e';
-=======
   const sampleUUID = "dfdf";
->>>>>>> Stashed changes
   
   const createNewConnect = async (token: string) => {
     // const socket = new SockJS("http://localhost:8080/ws");
@@ -66,16 +62,12 @@ const WebSocketClient = () => {
         if (err.body === "유효하지 않은 권한입니다.") {
           alert('subscribe 에러 발생')
         }
-      }
-<<<<<<< Updated upstream
-    }, () => {
-      setIsConnected(false);
-      console.log('websocket Closed');
-    });
-=======
-    );
-    
->>>>>>> Stashed changes
+      },
+      () => {
+        setIsConnected(false);
+        console.log('websocket Closed');
+      });
+  
     
     stompClient.activate();
     stompClientRef.current = stompClient;
@@ -101,15 +93,9 @@ const WebSocketClient = () => {
   }, [stompClientRef.current, stompClientRef.current?.active]);
   
   const isWebsocketConnected = () => {
-<<<<<<< Updated upstream
-    console.log('isWebsocketConnected : ', stompClientRef)
-    return stompClientRef.current !== null && stompClientRef.current.active
-  }
-=======
     console.log("isWebsocketConnected : ", stompClientRef);
     return stompClientRef.current !== null && stompClientRef.current.active;
   };
->>>>>>> Stashed changes
   
   async function handleConnection() {
     console.log(isWebsocketConnected());
