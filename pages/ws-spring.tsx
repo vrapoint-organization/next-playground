@@ -16,7 +16,11 @@ const WebSocketClient = () => {
   const stompClientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   
+<<<<<<< Updated upstream
   const sampleUUID = 'eqwe1e';
+=======
+  const sampleUUID = "dfdf";
+>>>>>>> Stashed changes
   
   const createNewConnect = async (token: string) => {
     // const socket = new SockJS("http://localhost:8080/ws");
@@ -24,48 +28,54 @@ const WebSocketClient = () => {
     const stompClient = Stomp.over(() => socket);
     
     stompClient.connect({
-      Authorization: token
-    }, () => {
-      // stompClient.subscribe("/sub/default", (msg) => {
-      //   console.log({ msg });
-      //   setResponse(JSON.parse(msg.body).response);
-      // });
-      
-      setIsConnected(true);
-      
-      stompClient.subscribe(`/sub/editor/${sampleUUID}`, (msg) => {
-        console.log('received From sub : ', msg);
-        const body = JSON.parse(msg.body)
-        const data = JSON.parse(msg.body).data
+        Authorization: token
+      }, () => {
+        // stompClient.subscribe("/sub/default", (msg) => {
+        //   console.log({ msg });
+        //   setResponse(JSON.parse(msg.body).response);
+        // });
         
-        setResponseObject(prev => {
-          const copied = {...prev};
-          if (body.type === 'COORDINATES') {
-            const positions = copied.positions;
-            positions[data.user] = {x: data.x, y: data.y}
-            copied.positions = positions;
-          } else if (body.type === 'ASSET') {
-            const assets = copied.assets;
-            if (!assets.includes(data.uuid)) {
-              assets.push(data.uuid);
+        setIsConnected(true);
+        
+        stompClient.subscribe(`/sub/editor/${sampleUUID}`, (msg) => {
+          console.log('received From sub : ', msg);
+          const body = JSON.parse(msg.body)
+          const data = JSON.parse(msg.body).data
+          
+          setResponseObject(prev => {
+            const copied = {...prev};
+            if (body.type === 'COORDINATES') {
+              const positions = copied.positions;
+              positions[data.user] = {x: data.x, y: data.y}
+              copied.positions = positions;
+            } else if (body.type === 'ASSET') {
+              const assets = copied.assets;
+              if (!assets.includes(data.uuid)) {
+                assets.push(data.uuid);
+              }
+              copied.assets = assets;
             }
-            copied.assets = assets;
-          }
-          return copied
+            return copied
+          });
+          // console.log({msg});
+          // setResponse(JSON.parse(msg.body).data.message);
         });
-        // console.log({msg});
-        // setResponse(JSON.parse(msg.body).data.message);
-      });
-    }, (err) => {
-      console.log('websocket Error, ', err);
-      setIsConnected(false);
-      if (err.body === "유효하지 않은 권한입니다.") {
-        alert('subscribe 에러 발생')
+      }, (err) => {
+        console.log('websocket Error, ', err);
+        setIsConnected(false);
+        if (err.body === "유효하지 않은 권한입니다.") {
+          alert('subscribe 에러 발생')
+        }
       }
+<<<<<<< Updated upstream
     }, () => {
       setIsConnected(false);
       console.log('websocket Closed');
     });
+=======
+    );
+    
+>>>>>>> Stashed changes
     
     stompClient.activate();
     stompClientRef.current = stompClient;
@@ -91,9 +101,15 @@ const WebSocketClient = () => {
   }, [stompClientRef.current, stompClientRef.current?.active]);
   
   const isWebsocketConnected = () => {
+<<<<<<< Updated upstream
     console.log('isWebsocketConnected : ', stompClientRef)
     return stompClientRef.current !== null && stompClientRef.current.active
   }
+=======
+    console.log("isWebsocketConnected : ", stompClientRef);
+    return stompClientRef.current !== null && stompClientRef.current.active;
+  };
+>>>>>>> Stashed changes
   
   async function handleConnection() {
     console.log(isWebsocketConnected());

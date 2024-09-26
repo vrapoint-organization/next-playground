@@ -8,6 +8,9 @@ import React, {
 } from "react";
 import { io, Socket } from "socket.io-client";
 import { compressData } from "./utils";
+import {Client, IFrame, Stomp} from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import ENV_PUBLIC from "@/scripts/client/ENV_PUBLIC";
 
 interface SocketContextType {
   connect: (token: string) => void;
@@ -50,16 +53,28 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const connect = (userName: string) => {
     if (socketRef.current) return;
+    const socket = new SockJS(ENV_PUBLIC.NEXT_PUBLIC_WEBSOCKET_URL);
+    const stompClient = Stomp.over(() => socket);
 
-    const socket = io(WEBSOCKET_URL, { query: { userName } });
-
-    socket.on("connect", () => setIsConnected(true));
-    socket.on("disconnect", () => setIsConnected(false));
-    socket.on("reply", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
-    socket.on("connect_error", (error) =>
-      console.error("Socket error:", error)
+    stompClient.connect(
+      {
+        Authorization: token,
+      },
+      (iframe: IFrame) => {
+        console.log('Stomp Client connected : ', iframe);
+        setIsConnected(true);
+      },
+      (err) => {
+        console.log("websocket Error, ", err);
+        setIsConnected(false);
+        if (err.body === "유효하지 않은 권한입니다.") {
+          alert("subscribe 에러 발생");
+        }
+      },
+      () => {
+        setIsConnected(false);
+        console.log("websocket Closed");
+      }
     );
 
     // Example of handling custom events
