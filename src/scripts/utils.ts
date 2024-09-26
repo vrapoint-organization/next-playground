@@ -1,4 +1,5 @@
 import pako from "pako";
+import { compressToBase64, decompressFromBase64 } from "lz-string";
 
 const serialize = (data: any): string => {
   return JSON.stringify(data);
@@ -7,7 +8,15 @@ const deserialize = (data: string): any => {
   return JSON.parse(data);
 };
 
-export const compressData = (data: any): Uint8Array => {
+export const compressData = (data: any): string => {
+  return compressToBase64(JSON.stringify(data));
+};
+
+export const decompressData = <T = any>(data: string): T => {
+  return JSON.parse(decompressFromBase64(data)) as T;
+};
+
+export const _compressData = (data: any): Uint8Array => {
   // Convert the data to a string format
   const serializedData = serialize(data);
 
@@ -22,7 +31,7 @@ export const compressData = (data: any): Uint8Array => {
 };
 
 // Function to decompress data
-export const decompressData = (compressedData: Uint8Array): any => {
+export const _decompressData = (compressedData: Uint8Array): any => {
   // Decompress the data using pako
   const decompressedDataArray = pako.inflate(compressedData);
 

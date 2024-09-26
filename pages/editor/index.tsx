@@ -1,9 +1,10 @@
-import useEditorSocket from "@/src/scripts/useEditorSocket";
+import { useSocket } from "@/src/scripts/SocketProvider";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
 function Editor({ myId }: { myId: string }) {
-  const { connect, isConnected } = useEditorSocket();
+  // const { connect, isConnected } = useEditorSocket();
+  const { connect, isConnected } = useSocket();
   const router = useRouter();
 
   return (

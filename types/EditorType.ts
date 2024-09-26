@@ -11,3 +11,8 @@ export interface CameraAtomType {
   showCameras: boolean;
   cameras: UserCamera[];
 }
+
+export interface EditorUserAtomType {
+  id: string;
+  name?: string;
+}
