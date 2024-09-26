@@ -1,4 +1,4 @@
-import { camerasAtom } from "@/src/jotai/editor";
+import { editorCamerasAtom } from "@/src/jotai/editor";
 import { OrbitControls, OrbitControlsProps, Sphere } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { useAtomValue } from "jotai";
@@ -141,14 +141,14 @@ const EditorCanvasRenderer = ({
 }: {
   onCameraChange: OrbitControlsProps["onChange"];
 }) => {
-  const cameras = useAtomValue(camerasAtom);
+  const cameras = useAtomValue(editorCamerasAtom);
 
   return (
     <Canvas style={{ width: "100%", height: "100%" }}>
       {cameras.cameras.map((camera) => {
         return (
           <LineFromMatrix
-            matrix={camera.matrix}
+            matrix={camera.camera}
             color={camera.color}
             key={camera.id}
           ></LineFromMatrix>

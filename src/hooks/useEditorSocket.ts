@@ -1,30 +1,10 @@
 import { MutableRefObject, useEffect, useRef, useState } from "react";
-import { useSocket } from "./SocketProvider";
-import { Client, IMessage } from "@stomp/stompjs";
+import { useSocket } from "../scripts/SocketProvider";
+import { Client } from "@stomp/stompjs";
 import { getCookie } from "cookies-next";
-import ENV_PUBLIC from "./ENV_PUBLIC";
-
-export interface DataFunction {
-  DEFAULT: (data: any) => void;
-  BROADCAST: (data: any) => void;
-  CAMERA: (data: any) => void;
-  DATA_TRANSFER: (data: any) => void;
-  REVIEW: (data: any) => void;
-}
-
-export interface FlowFunction {}
-
-const dataChannelHandler = (msg: IMessage) => {
-  const data = JSON.parse(msg.body);
-  // handler
-  console.log({ data });
-};
-
-const flowChannelHandler = (msg: IMessage) => {
-  const data = JSON.parse(msg.body);
-  console.log({ flowData: data });
-  // handler[data.type](data.data);
-};
+import ENV_PUBLIC from "../scripts/ENV_PUBLIC";
+import EditorDataChannelHandler from "../scripts/EditorDataChannelHandler";
+import EditorFlowChannelHandler from "../scripts/EditorFlowChannelHandler";
 
 const safeSocket = (socketRef: MutableRefObject<Client | null>) => {
   const socket = socketRef.current;
@@ -74,14 +54,14 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
   const subscribeData = () => {
     checkBeforeSocketInteraction();
     const socket = safeSocket(socketRef);
-    socket.subscribe(urls.subDataUrl, dataChannelHandler);
+    socket.subscribe(urls.subDataUrl, EditorDataChannelHandler);
     console.log("subscribed to Data channel");
   };
 
-  const subscribeFlow = (handlerOverride?: FlowFunction) => {
+  const subscribeFlow = () => {
     checkBeforeSocketInteraction();
     const socket = safeSocket(socketRef);
-    socket.subscribe(urls.subFlowUrl, flowChannelHandler);
+    socket.subscribe(urls.subFlowUrl, EditorFlowChannelHandler);
     console.log("subscribed to Flow channel");
   };
 
@@ -106,6 +86,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
   };
 
   const cleanup = () => {
+    console.log("Unsub");
     socketRef.current?.unsubscribe(urls.subDataUrl);
     socketRef.current?.unsubscribe(urls.subFlowUrl);
   };

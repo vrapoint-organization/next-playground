@@ -8,7 +8,7 @@ export interface UserCamera {
 }
 
 export interface CameraAtomType {
-  showCameras: boolean;
+  showCameras?: boolean;
   cameras: UserCamera[];
 }
 

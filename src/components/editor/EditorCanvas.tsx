@@ -1,9 +1,9 @@
-import { camerasAtom, editorUserAtom } from "@/src/jotai/editor";
+import { editorCamerasAtom, editorUserAtom } from "@/src/jotai/editor";
 import { OrbitControlsChangeEvent } from "@react-three/drei";
 import { useAtomValue } from "jotai";
 import { useRef } from "react";
 import EditorCanvasRenderer from "./EditorCanvasRenderer";
-import useEditorSocket from "@/src/scripts/useEditorSocket";
+import useEditorSocket from "@/src/hooks/useEditorSocket";
 
 export type EditorCanvasProps = {
   userId: string;
@@ -18,13 +18,14 @@ export type EditorCanvasProps = {
 const EditorCanvas = (props: EditorCanvasProps) => {
   const { userId, socketExports } = props;
   const { publishData, publishFlow } = socketExports;
-  const cameras = useAtomValue(camerasAtom);
+  const cameras = useAtomValue(editorCamerasAtom);
   const user = useAtomValue(editorUserAtom);
-  console.log({ userInEditorCanvas: user });
+  // console.log({ userInEditorCanvas: user });
 
   const lastSent = useRef(0);
   const functions = {
     onCameraChange: (e?: OrbitControlsChangeEvent) => {
+      // console.log("onCameraChange called");
       const mat = e?.target.object.matrix.toArray();
       const now = Date.now();
       const canSend = now - lastSent.current > 100;

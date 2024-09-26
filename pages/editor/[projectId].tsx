@@ -1,13 +1,11 @@
 import { Matrix4 } from "three";
-import useEditorSocket from "@/src/scripts/useEditorSocket";
+import useEditorSocket from "@/src/hooks/useEditorSocket";
 import { GetServerSidePropsContext } from "next";
 import LeftPanel from "@/src/components/editor/LeftPanel";
 import RightPanel from "@/src/components/editor/RightPanel";
-import { Provider, useAtom, useSetAtom } from "jotai";
-import { camerasAtom, editorStore, editorUserAtom } from "@/src/jotai/editor";
+import { editorStore, editorUserAtom } from "@/src/jotai/editor";
 import Link from "next/link";
 import EditorCanvas from "@/src/components/editor/EditorCanvas";
-import { useEffect } from "react";
 import { useRouter } from "next/router";
 import JotaiSSRProvider from "@/src/jotai/JotaiSSRProvider";
 
@@ -18,25 +16,23 @@ export default function Editor({
   myId: string;
   projectId: string;
 }) {
+  const router = useRouter();
   const socketExports = useEditorSocket({
     productId: projectId,
     // connectOnMount: true,
+    actionOnDisconnection() {
+      alert("소켓 연결 실패");
+      router.back();
+    },
   });
 
-  const {
-    socket,
-    isConnected,
-    subscribeData,
-    subscribeFlow,
-    publishData,
-    publishFlow,
-  } = socketExports;
-  const router = useRouter();
+  const { isConnected, publishData, publishFlow } = socketExports;
 
   if (!isConnected) {
     return (
       <div>
-        Not Connected
+        {/* Not Connected */}
+        연결 중...
         <br></br>
         <Link href="/editor">Back to connect</Link>
       </div>
@@ -80,9 +76,12 @@ export default function Editor({
     </div>
   );
 
+  console.log("ProjectId rendered");
+
   return (
     // <Provider store={editorStore}>
     <JotaiSSRProvider
+      store={editorStore}
       atomValues={[
         [
           editorUserAtom,
