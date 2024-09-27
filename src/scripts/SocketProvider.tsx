@@ -77,15 +77,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     stompClient.activate();
     socketRef.current = stompClient;
 
+    console.log("Activated socket. Active : ", stompClient?.active);
     return stompClient?.active;
   };
 
   const disconnect = () => {
-    if (socketRef.current) {
-      console.log("Deactivatedx");
-      socketRef.current.deactivate();
-    }
+    // if (socketRef.current) {
+    // }
+    socketRef.current?.deactivate();
+    socketRef.current?.forceDisconnect();
     socketRef.current = null;
+    console.log("Deactivated socket");
   };
 
   useEffect(() => {

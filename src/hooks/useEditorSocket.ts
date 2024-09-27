@@ -89,14 +89,17 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     console.log("Unsub");
     socketRef.current?.unsubscribe(urls.subDataUrl);
     socketRef.current?.unsubscribe(urls.subFlowUrl);
+    socketRef.current?.deactivate();
+    socketRef.current?.forceDisconnect();
+    socketRef.current = null;
   };
 
   useEffect(() => {
     const onEditorSocketMount = async () => {
       // 어디든 첫 페이지 진입 시 연결 시도
-      const tryToConnectOnMount = !disableConnectionOnMount;
+      const socket = socketExports.socket.current;
+      const tryToConnectOnMount = !disableConnectionOnMount && !socket?.active;
       if (tryToConnectOnMount) {
-        const socket = socketExports.socket.current;
         // 소켓연결이 없으면 연결 시도, 실패 시 얼리리턴
         if (!socket) {
           const random3digitNumber = Math.floor(Math.random() * 1000);
@@ -105,6 +108,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
             `MASTER${random3digitNumber}`;
           if (token) {
             let failed = null;
+            console.log("isConnected:", socketExports.isConnected);
             await socketExports.connect(token).catch((e) => {
               failed = e;
             });
@@ -124,6 +128,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
         // 여기까지 왔으면 소켓 연결 성공
         // subscribe 시도
         if (productId) {
+          // socket.sub;
           subscribeData();
           subscribeFlow();
         }
@@ -143,3 +148,5 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     publishFlow,
   };
 }
+
+export type EditorSocketExports = ReturnType<typeof useEditorSocket>;

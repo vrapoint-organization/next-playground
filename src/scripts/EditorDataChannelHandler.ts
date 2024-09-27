@@ -1,5 +1,7 @@
+import { DataSkeleton, EditorReview } from "@/types/EditorType";
 import { IMessage } from "@stomp/stompjs";
-import { getEditorUserAtom } from "../jotai/editor";
+import { setEditorReviewAtom } from "../jotai/editor";
+// import { getEditorUserAtom } from "../jotai/editor";
 
 export interface DataFunction {
   DEFAULT: (data: any) => void;
@@ -13,8 +15,22 @@ export interface DataFunction {
 const EditorDataChannelHandler = (msg: IMessage) => {
   const data = JSON.parse(msg.body);
   // handler
-  console.log({ data });
-  console.log({ getUser: getEditorUserAtom() });
+  console.log({ EditorDataChannelHandler: data });
+  // console.log({ getUser: getEditorUserAtom() });
+  if (data.type === "DATA_TRANSFER") {
+    const contained = data.data as DataSkeleton;
+
+    if (contained.type === "REVIEW") {
+      const review = contained.data as EditorReview;
+      console.log({ review });
+      setEditorReviewAtom((prev) => {
+        return {
+          ...prev,
+          reviews: [...prev.reviews, review],
+        };
+      });
+    }
+  }
 };
 
 export default EditorDataChannelHandler;
