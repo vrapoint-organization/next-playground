@@ -3,6 +3,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Sphere, Text } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import {
   BoxGeometry,
   Camera,
@@ -18,12 +19,16 @@ import {
 import type { EditorSocketExports } from "@/src/hooks/useEditorSocket";
 import {
   editorCamerasAtom,
+  editorModelData,
+  editorModelDataModified,
   editorReviewAtom,
+  editorSceneDataUpdated,
   editorStatus,
   editorUserCameraInfo,
   editorUserCameraMatrix,
   editorUserSelectedObject,
 } from "@/src/jotai/editor";
+import { analyzeNode, DataNode } from "@/src/scripts/VNode";
 
 export type EditorCanvasProps = {
   userId: string;
@@ -138,7 +143,7 @@ const useUpdateWriteonlyAtoms = (
   }
 ) => {
   const { userId, socketExports, myCameraRef } = props;
-  const { publishFlow } = socketExports;
+  const { publishData } = socketExports;
   // const cameraInfo = useAtomValue(editorUserCameraMatrix);
   const cameraInfo = useAtomValue(editorUserCameraInfo);
   const _setUserCameraMatrix = useSetAtom(editorUserCameraMatrix);
@@ -159,16 +164,29 @@ const useUpdateWriteonlyAtoms = (
   useEffect(() => {
     const now = Date.now();
     const canSend = now - lastSent.current > 100;
+    type StateSendData = {
+      cameraInfo: {
+        matrix: number[];
+      };
+      selectedInfo: {
+        nodeId?: string;
+      };
+    };
+
     if (canSend) {
       lastSent.current = now;
       const matrix = myCameraRef.current.matrix;
       console.log("Here");
-      publishFlow({
-        type: "CAMERA",
+      publishData({
+        type: "USER_STATE",
         data: {
-          id: userId,
-          matrix: matrix.toArray(),
-        },
+          cameraInfo: {
+            matrix: matrix.toArray(),
+          },
+          selectedInfo: {
+            nodeId: undefined,
+          },
+        } as StateSendData,
       });
     }
   }, [cameraInfo.updatedAt]);
@@ -228,30 +246,130 @@ const CameraController = (props: EditorCanvasProps) => {
 
 const UserSelectBox = () => {
   const userSelectedObject = useAtomValue(editorUserSelectedObject);
+  const modifiedModelData = useAtomValue(editorSceneDataUpdated);
+  const prevModifiedModelData = useRef<string | string[] | null>(null);
+  console.log({ userSelectedObject, modifiedModelData });
   const { scene } = useThree();
+  const computeMeshArgs: () => {
+    position: Vector3;
+    boxArgs: [
+      width?: number | undefined,
+      height?: number | undefined,
+      depth?: number | undefined
+    ];
+  } | null = () => {
+    if (!userSelectedObject) {
+      return null;
+    }
 
-  if (!userSelectedObject) {
+    const modelHasChanged = (() => {
+      //바뀌었는지 체크
+      if (!prevModifiedModelData) {
+        return true;
+      }
+      if (Array.isArray(prevModifiedModelData.current)) {
+        return prevModifiedModelData.current.every((id) => {
+          return !modifiedModelData?.includes(id);
+        });
+      }
+      return prevModifiedModelData.current !== modifiedModelData;
+    })();
+    prevModifiedModelData.current = modifiedModelData;
+
+    // 셀렉트는 유지이지만 모델이 변경되었을 때
+    if (modelHasChanged && modifiedModelData) {
+      // 변화된 모델 데이터가 셀렉트 된 오브젝트와 일치하지 않으면 null
+      if (Array.isArray(modifiedModelData)) {
+        if (!modifiedModelData.includes(userSelectedObject.id)) {
+          return null;
+        }
+      }
+
+      if (
+        typeof modifiedModelData === "string" &&
+        modifiedModelData !== userSelectedObject.id
+      ) {
+        return null;
+      }
+    }
+
+    const obj = scene.getObjectByProperty("uuid", userSelectedObject.id);
+
+    if (!obj) {
+      return null;
+    }
+    (obj as Mesh).geometry.computeBoundingBox();
+    const selectBox = (obj as Mesh).geometry.boundingBox!;
+    const pos = obj.position.clone();
+
+    console.log("Updated", obj.position);
+    // debugger;
+
+    return {
+      position: pos,
+      boxArgs: [
+        selectBox.max.x - selectBox.min.x,
+        selectBox.max.y - selectBox.min.y,
+        selectBox.max.z - selectBox.min.z,
+      ],
+    };
+  };
+  const meshArgs = computeMeshArgs();
+  if (!meshArgs) {
     return null;
   }
 
-  const obj = scene.getObjectById(userSelectedObject);
-  console.log("Selected:", obj);
-
-  (obj as Mesh).geometry.computeBoundingBox();
-  const selectBox = (obj as Mesh).geometry.boundingBox!;
+  const { position, boxArgs } = meshArgs;
 
   return (
-    <mesh scale={new Vector3(1.15, 1.15, 1.15)}>
-      <boxGeometry
-        args={[
-          selectBox.max.x - selectBox.min.x,
-          selectBox.max.y - selectBox.min.y,
-          selectBox.max.z - selectBox.min.z,
-        ]}
-      />
-      <meshStandardMaterial color="ivory" transparent opacity={0.3} />
+    <mesh scale={new Vector3(1.15, 1.15, 1.15)} position={position}>
+      <boxGeometry args={boxArgs} />
+      <meshStandardMaterial color="ivory" transparent opacity={0.5} />
     </mesh>
   );
+
+  // if (!userSelectedObject) {
+  //   return null;
+  // }
+
+  // console.log({
+  //   modified: modifiedModelData?.id,
+  //   selected: userSelectedObject.id,
+  // });
+
+  // if (modifiedModelData && modifiedModelData.id !== userSelectedObject.id) {
+  //   return null;
+  // }
+
+  // console.log("Update");
+
+  // const obj = scene.getObjectByProperty("uuid", userSelectedObject.id)!;
+
+  // (obj as Mesh).geometry.computeBoundingBox();
+  // const selectBox = (obj as Mesh).geometry.boundingBox!;
+  // const position = obj.position.clone();
+  // console.log("Selected:", {
+  //   userSelectedObject,
+  //   obj,
+  //   objPosition: obj.position,
+  //   cloned: position,
+  // });
+
+  // return (
+  //   <mesh
+  //     scale={new Vector3(1.15, 1.15, 1.15)}
+  //     position={new Vector3(obj.position.x, obj.position.y, obj.position.z)}
+  //   >
+  //     <boxGeometry
+  //       args={[
+  //         selectBox.max.x - selectBox.min.x,
+  //         selectBox.max.y - selectBox.min.y,
+  //         selectBox.max.z - selectBox.min.z,
+  //       ]}
+  //     />
+  //     <meshStandardMaterial color="ivory" transparent opacity={0.3} />
+  //   </mesh>
+  // );
 };
 
 const OtherUserCamera = () => {
@@ -310,13 +428,63 @@ const UserReviews = () => {
   );
 };
 
+const TheModel = () => {
+  const model = useAtomValue(editorModelData);
+  const modelDataModified = useAtomValue(editorModelDataModified);
+  const setEditorSceneDataUpdated = useSetAtom(editorSceneDataUpdated);
+  const { scene } = useThree();
+  // console.log({ Themodel: model });
+  if (!model) {
+    return null;
+  }
+
+  useEffect(() => {
+    // const copied = model.children.map((child) => child.clone());
+    // scene.add(...copied);
+    // return () => {
+    //   scene.remove(...copied);
+    // };
+    const models = model.children;
+    const updatedIds = models.map((model) => model.uuid);
+    scene.add(...models);
+    setEditorSceneDataUpdated(updatedIds);
+    return () => {
+      scene.remove(...models);
+    };
+  }, [model]);
+
+  useEffect(() => {
+    if (!modelDataModified) {
+      return;
+    }
+    const { id, data: modified } = modelDataModified;
+    const { action, value } = modified;
+    const target = scene.getObjectByProperty("uuid", id);
+    if (!target) {
+      console.error("Target not found", { id });
+      return;
+    }
+    if (action === "position") {
+      target.position.set(value[0], value[1], value[2]);
+      setEditorSceneDataUpdated(id);
+      // target.updateMatrix();
+    } else {
+      console.log("Unknown action", { modelDataModified });
+    }
+  }, [modelDataModified]);
+
+  return null;
+};
+
 const Hotspots = () => {
   return null;
 };
 
 // 밖에서 넣어주는 데이터로 그림만 그리는 컴포넌트
 const EditorCanvasRenderer = (props: EditorCanvasProps) => {
-  const setUserSelectedObject = useSetAtom(editorUserSelectedObject);
+  // const setUserSelectedObject = useSetAtom(editorUserSelectedObject);
+  const { scene } = useThree();
+  console.log({ scene });
 
   // const [userSelectBox, setUserSelectBox] = useState<React.ReactNode | null>(
   //   null
@@ -328,13 +496,11 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
       <UserReviews></UserReviews>
       <Hotspots></Hotspots>
       <CameraController {...props}></CameraController>
-
       <ambientLight />
-      {/* <directionalLight position={[0, 0, 5]} color="red" /> */}
       <UserSelectBox></UserSelectBox>
-
+      <TheModel></TheModel>
       {/* basic cube */}
-      <mesh
+      {/* <mesh
         position={new Vector3(0, 0, 0)}
         onClick={(e) => {
           setUserSelectedObject(e.object.id);
@@ -342,7 +508,7 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
       >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="hotpink" />
-      </mesh>
+      </mesh> */}
     </>
   );
 };
@@ -354,6 +520,30 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
 // 참고 : 직접적으로 sub된 데이터를 핸들링하는 파트는 useEditorSocket에서만 할 것
 const EditorCanvas = (props: EditorCanvasProps) => {
   const setEditorUserSelectedObject = useSetAtom(editorUserSelectedObject);
+
+  const setModel = useSetAtom(editorModelData);
+  const setStatus = useSetAtom(editorStatus);
+
+  useEffect(() => {
+    if (!true) {
+      setTimeout(() => {
+        setStatus("success");
+      }, 1000);
+    } else {
+      const loader = new THREE.ObjectLoader();
+      loader.load("/node/twoboxthree.json", (obj) => {
+        // console.log({ setModel: obj });
+        setModel(obj);
+        setStatus("success");
+      });
+      // fetch("/node/twoboxnode.json")
+      //   .then((res) => res.json())
+      //   .then((data: DataNode) => {
+      //     console.log("twobox", data);
+      //     setModel(data);
+      //   });
+    }
+  }, []);
 
   return (
     <Canvas

@@ -10,7 +10,9 @@ import {
   SetStateAction,
   WritableAtom,
 } from "jotai";
-import { Matrix4 } from "three";
+import { Matrix4, Object3D, Scene } from "three";
+import type { DataNode } from "../scripts/VNode";
+import { string } from "three/webgpu";
 
 export const editorStore = createStore();
 
@@ -83,7 +85,27 @@ export const editorUserCameraInfo = atom<EditorUserCameraInfoType>({
   updatedAt: 0,
 });
 
-export const editorUserSelectedObject = atom<number | null>(null);
+export const editorUserSelectedObject = atom<DataNode | null>(null);
 
 export type EditorStatus = "loading" | "failed" | "success" | "reconnecting";
 export const editorStatus = atom<EditorStatus>("loading");
+
+export const editorModelData = atom<Object3D | null>(null);
+
+// WS에서 데이터를 받아서 EditorCanvas.TheModel에서 실제로 Scene에 데이터를 추가할 때 사용
+// 실제 씬에 데이터를 업데이트 한 후 아래의 editorSceneDataUpdated에 업데이트 된 아이디를 전달
+// * 중요!!
+// 모델 데이터가 업데이트됐다고 바로 씬에 데이터가 업데이트되는 것이 아니므로
+// TheModel이 아닌 다른 컴포넌트에서 씬의 업데이트를 감지할 때는 editorSceneDataUpdated를 사용해야함
+
+export const editorModelDataModified = atom<{
+  id: string;
+  data: {
+    action: "position" | "rotation";
+    value: number[];
+  };
+} | null>(null);
+
+export const editorSceneDataUpdated = atom<string | string[] | null>(null);
+
+export const editorNode = atom<DataNode | null>(null);

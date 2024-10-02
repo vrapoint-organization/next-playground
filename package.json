@@ -8,7 +8,9 @@
     "start": "next start",
     "utils:update": "npm uninstall -D git+https://github.com/vrap-stan/vrutils.git && npm i -D git+https://github.com/vrap-stan/vrutils.git",
     "env": "envclass --transpile",
-    "lint": "next lint"
+    "lint": "next lint",
+    "string": "cd twinviz-string && git pull && cd .. && mkdir public/locales && cp -r twinviz-string/* public/locales",
+    "string:install": "git clone git@github.com:vrapoint-organization/twinviz-string.git"
   },
   "dependencies": {
     "@emotion/cache": "^11.13.1",

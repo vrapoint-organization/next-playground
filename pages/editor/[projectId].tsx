@@ -4,6 +4,8 @@ import { GetServerSidePropsContext } from "next";
 import LeftPanel from "@/src/components/editor/LeftPanel";
 import RightPanel from "@/src/components/editor/RightPanel";
 import {
+  editorModelDataModified,
+  editorNode,
   editorStatus as editorStatusAtom,
   editorStore,
   editorUserAtom,
@@ -13,15 +15,13 @@ import EditorCanvas from "@/src/components/editor/EditorCanvas";
 import { useRouter } from "next/router";
 import JotaiSSRProvider from "@/src/jotai/JotaiSSRProvider";
 import { useEffect, useMemo } from "react";
-import { useAtom } from "jotai";
-
-export default function Editor({
-  myId,
-  projectId,
-}: {
+import { useAtom, useSetAtom } from "jotai";
+import * as THREE from "three";
+export type EditorProps = {
   myId: string;
   projectId: string;
-}) {
+};
+const _Editor = ({ myId, projectId }: EditorProps) => {
   const router = useRouter();
   const socketExports = useEditorSocket({
     productId: projectId,
@@ -32,7 +32,9 @@ export default function Editor({
     },
   });
 
-  const { isConnected, publishFlow, session } = socketExports;
+  const setModifiedModelData = useSetAtom(editorModelDataModified);
+
+  const { isConnected, publishData, session } = socketExports;
 
   useEffect(() => {
     if (isConnected) {
@@ -40,109 +42,63 @@ export default function Editor({
     }
   }, [isConnected]);
 
-  const ControlPanel = () => (
-    <div
-      style={{
-        display: true ? "inherit" : "none",
-        position: "absolute",
-        right: 0,
-        bottom: 0,
-        backgroundColor: "#d0d0d0",
-        zIndex: 100,
-      }}
-    >
-      ControlPanel
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {/* <button
-          onClick={() => {
-            publishData({ type: "REVIEW", id: "" });
-          }}
-        >
-          Data
-        </button> */}
-        <button
-          onClick={() => {
-            publishFlow({
-              type: "REVIEW",
-              data: {
-                id: myId,
-                matrix: new Matrix4().toArray(),
-              },
-            });
-          }}
-        >
-          Flow
-        </button>
-      </div>
-    </div>
-  );
-
-  console.log("ProjectId rendered");
-
-  const [status, setStatus] = useAtom(editorStatusAtom);
-  useEffect(() => {
-    if (!true) {
-      setTimeout(() => {
-        setStatus("success");
-      }, 1000);
-    } else {
-      fetch("/node/twobox.json")
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("twobox", data);
-          setStatus("success");
-        });
-    }
-  }, []);
-
-  const TheContent = useMemo(() => {
-    switch (status) {
-      case "loading":
-        return (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+  const ControlPanel = () =>
+    !true ? null : (
+      <div
+        style={{
+          display: true ? "inherit" : "none",
+          position: "absolute",
+          right: 0,
+          bottom: 0,
+          backgroundColor: "#d0d0d0",
+          zIndex: 100,
+        }}
+      >
+        ControlPanel
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <button
+            onClick={() => {
+              publishData({
+                type: "ECHO",
+                data: {
+                  mydata: "한지우 그는 신인가?",
+                },
+              });
             }}
           >
-            Loading...
-          </div>
-        );
-      case "success":
-        return (
-          <>
-            <EditorCanvas
-              socketExports={socketExports}
-              userId={myId}
-            ></EditorCanvas>
-            <LeftPanel></LeftPanel>
-            <RightPanel></RightPanel>
-            <ControlPanel></ControlPanel>
-          </>
-        );
-      default:
-        return <div>구현되지 않은 status : {status}</div>;
-    }
-  }, [status]);
-
-  // if (status === "loading") {
-  //   return (
-  //     <div
-  //       style={{
-  //         width: "100%",
-  //         height: "100%",
-  //         display: "flex",
-  //         alignItems: "center",
-  //         justifyContent: "center",
-  //       }}
-  //     >
-  //       Loading...
-  //     </div>
-  //   );
-  // }
+            Data
+          </button>
+          <button
+            onClick={() => {
+              publishData({
+                type: "REVIEW",
+                data: {
+                  id: myId,
+                  matrix: new Matrix4().toArray(),
+                },
+              });
+            }}
+          >
+            Flow
+          </button>
+          <button
+            onClick={() => {
+              setModifiedModelData((prev) => {
+                return {
+                  id: "0a2d8a62-c09b-4833-a706-fb42f2523608",
+                  data: {
+                    action: "position",
+                    value: [0, 1, 0],
+                  },
+                };
+              });
+            }}
+          >
+            setModifiedModelData
+          </button>
+        </div>
+      </div>
+    );
 
   if (!isConnected) {
     return (
@@ -156,7 +112,29 @@ export default function Editor({
   }
 
   return (
-    // <Provider store={editorStore}>
+    <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
+      <EditorCanvas socketExports={socketExports} userId={myId}></EditorCanvas>
+      <LeftPanel></LeftPanel>
+      <RightPanel></RightPanel>
+      <ControlPanel></ControlPanel>
+    </div>
+  );
+};
+
+const Editor = (props: EditorProps) => {
+  const router = useRouter();
+  const { myId, projectId } = props;
+  const socketExports = useEditorSocket({
+    productId: projectId,
+    // connectOnMount: true,
+    actionOnDisconnection() {
+      alert("소켓 연결 실패");
+      router.back();
+    },
+  });
+  const { session } = socketExports;
+
+  return (
     <JotaiSSRProvider
       store={editorStore}
       atomValues={[
@@ -170,12 +148,12 @@ export default function Editor({
         ],
       ]}
     >
-      <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
-        {TheContent}
-      </div>
+      <_Editor {...props}></_Editor>
     </JotaiSSRProvider>
   );
-}
+};
+
+export default Editor;
 
 export const getServerSideProps = (ctx: GetServerSidePropsContext) => {
   const { query } = ctx;

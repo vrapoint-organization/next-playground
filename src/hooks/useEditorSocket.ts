@@ -4,6 +4,7 @@ import { Client } from "@stomp/stompjs";
 import { getCookie } from "cookies-next";
 import ENV_PUBLIC from "../scripts/ENV_PUBLIC";
 import EditorDataChannelHandler from "../scripts/EditorDataChannelHandler";
+import useEffectOnce from "../scripts/useEffectOnce";
 // import EditorFlowChannelHandler from "../scripts/EditorFlowChannelHandler";
 
 const safeSocket = (socketRef: MutableRefObject<Client | null>) => {
@@ -36,6 +37,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
   const urls = {
     subUrl: `/user/sub/editor/${productId}/flow`,
     pubUrl: `/pub/editor/${productId}/flow`,
+    initialPubUrl: `/pub/editor/${productId}/enter`, //sub시 최초로 한 번만 pub해야함
     // subGeneralUrl: `/sub/editor/${productId}/flow`,
   };
 
@@ -54,6 +56,10 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     checkBeforeSocketInteraction();
     const socket = safeSocket(socketRef);
     socket.subscribe(urls.subUrl, EditorDataChannelHandler);
+    socket.publish({
+      destination: urls.initialPubUrl,
+      body: "",
+    });
     console.log("subscribed to Data channel");
   };
 
@@ -74,7 +80,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
   //   });
   // };
 
-  const publishFlow = (data: any) => {
+  const publishData = (data: { type: string; data: any }) => {
     checkBeforeSocketInteraction();
     const socket = safeSocket(socketRef);
     socket.publish({
@@ -93,7 +99,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     // socketRef.current = null;
   };
 
-  useEffect(() => {
+  useEffectOnce(() => {
     const onEditorSocketMount = async () => {
       // 어디든 첫 페이지 진입 시 연결 시도
       const socket = socketExports.socket.current;
@@ -144,7 +150,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     subscribeEditor,
     // subscribeFlow,
     // publishData,
-    publishFlow,
+    publishData,
   };
 }
 

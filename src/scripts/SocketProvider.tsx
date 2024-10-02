@@ -54,14 +54,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
           Authorization: token,
         },
         (iframe) => {
-          console.log({ iframe });
+          // console.log({ iframe });
           sessionRef.current = iframe.headers["user-name"];
-          console.log("SessionRef:", sessionRef.current);
+          // console.log("SessionRef:", sessionRef.current);
           setIsConnected(true);
           resolve(true);
         },
         (err) => {
-          console.log("websocket Error, ", err);
+          console.error("websocket Error, ", err);
           setIsConnected(false);
           if (err.body === "유효하지 않은 권한입니다.") {
             alert("subscribe 에러 발생");
@@ -82,7 +82,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     stompClient.activate();
     socketRef.current = stompClient;
 
-    console.log("Activated socket. Active : ", stompClient?.active);
+    // console.log("Activated socket. Active : ", stompClient?.active);
     return stompClient?.active;
   };
 
@@ -94,7 +94,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     socketRef.current = null;
     sessionRef.current = null;
     setIsConnected(false);
-    console.log("Deactivated socket");
+    // console.log("Deactivated socket");
   };
 
   useEffect(() => {
