@@ -104,8 +104,12 @@ export const editorModelDataModified = atom<{
     action: "position" | "rotation";
     value: number[];
   };
+  updatdAt: number;
 } | null>(null);
 
-export const editorSceneDataUpdated = atom<string | string[] | null>(null);
+export const editorSceneDataUpdated = atom<{
+  id: string | string[];
+  updatedAt: number;
+} | null>(null);
 
 export const editorNode = atom<DataNode | null>(null);

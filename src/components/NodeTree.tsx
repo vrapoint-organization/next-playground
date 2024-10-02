@@ -82,7 +82,7 @@ const NodeTree = (props: NodeTreeProps & { node?: DataNode | null }) => {
     return null;
   }
 
-  console.log("NodeTree : ", props?.node);
+  // console.log("NodeTree : ", props?.node);
 
   return (
     <div style={{ width: "100%" }}>

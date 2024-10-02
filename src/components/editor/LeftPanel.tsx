@@ -11,7 +11,7 @@ function LeftPanel() {
   //   console.log({ cameras });
   // console.log("LeftPanel");
   const node = useAtomValue(editorModelData);
-  console.log({ leftpanel: node });
+  // console.log({ leftpanel: node });
 
   return (
     <Container>

@@ -84,17 +84,40 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
           <button
             onClick={() => {
               setModifiedModelData((prev) => {
+                const x = Math.random() * 2 - 1;
+                const y = Math.random() * 2 - 1;
+                const z = Math.random() * 2 - 1;
                 return {
                   id: "0a2d8a62-c09b-4833-a706-fb42f2523608",
                   data: {
                     action: "position",
-                    value: [0, 1, 0],
+                    value: [x, y, z],
                   },
+                  updatedAt: new Date().getTime(),
                 };
               });
             }}
           >
-            setModifiedModelData
+            Move left box
+          </button>
+          <button
+            onClick={() => {
+              setModifiedModelData((prev) => {
+                const x = Math.random() * 2 + 2;
+                const y = Math.random() * 2 - 1;
+                const z = Math.random() * 2 - 1;
+                return {
+                  id: "9d24b37d-93b5-4a0d-9718-c67bdeb23319",
+                  data: {
+                    action: "position",
+                    value: [x, y, z],
+                  },
+                  updatedAt: new Date().getTime(),
+                };
+              });
+            }}
+          >
+            Move right box
           </button>
         </div>
       </div>

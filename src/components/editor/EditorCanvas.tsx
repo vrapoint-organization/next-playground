@@ -247,8 +247,11 @@ const CameraController = (props: EditorCanvasProps) => {
 const UserSelectBox = () => {
   const userSelectedObject = useAtomValue(editorUserSelectedObject);
   const modifiedModelData = useAtomValue(editorSceneDataUpdated);
-  const prevModifiedModelData = useRef<string | string[] | null>(null);
-  console.log({ userSelectedObject, modifiedModelData });
+  const prevModifiedModelData = useRef<{
+    id: string | string[];
+    updatedAt: number;
+  } | null>(null);
+  // console.log({ userSelectedObject, modifiedModelData });
   const { scene } = useThree();
   const computeMeshArgs: () => {
     position: Vector3;
@@ -264,15 +267,26 @@ const UserSelectBox = () => {
 
     const modelHasChanged = (() => {
       //바뀌었는지 체크
-      if (!prevModifiedModelData) {
+      if (!prevModifiedModelData.current) {
         return true;
       }
-      if (Array.isArray(prevModifiedModelData.current)) {
-        return prevModifiedModelData.current.every((id) => {
-          return !modifiedModelData?.includes(id);
+
+      if (!modifiedModelData) {
+        return false;
+      }
+
+      if (
+        prevModifiedModelData.current.updatedAt > modifiedModelData.updatedAt
+      ) {
+        return false;
+      }
+
+      if (Array.isArray(prevModifiedModelData.current?.id)) {
+        return prevModifiedModelData.current.id.every((id) => {
+          return !modifiedModelData?.id.includes(id);
         });
       }
-      return prevModifiedModelData.current !== modifiedModelData;
+      return prevModifiedModelData.current.id !== modifiedModelData?.id;
     })();
     prevModifiedModelData.current = modifiedModelData;
 
@@ -302,7 +316,7 @@ const UserSelectBox = () => {
     const selectBox = (obj as Mesh).geometry.boundingBox!;
     const pos = obj.position.clone();
 
-    console.log("Updated", obj.position);
+    // console.log("Updated", obj.position);
     // debugger;
 
     return {
@@ -327,49 +341,6 @@ const UserSelectBox = () => {
       <meshStandardMaterial color="ivory" transparent opacity={0.5} />
     </mesh>
   );
-
-  // if (!userSelectedObject) {
-  //   return null;
-  // }
-
-  // console.log({
-  //   modified: modifiedModelData?.id,
-  //   selected: userSelectedObject.id,
-  // });
-
-  // if (modifiedModelData && modifiedModelData.id !== userSelectedObject.id) {
-  //   return null;
-  // }
-
-  // console.log("Update");
-
-  // const obj = scene.getObjectByProperty("uuid", userSelectedObject.id)!;
-
-  // (obj as Mesh).geometry.computeBoundingBox();
-  // const selectBox = (obj as Mesh).geometry.boundingBox!;
-  // const position = obj.position.clone();
-  // console.log("Selected:", {
-  //   userSelectedObject,
-  //   obj,
-  //   objPosition: obj.position,
-  //   cloned: position,
-  // });
-
-  // return (
-  //   <mesh
-  //     scale={new Vector3(1.15, 1.15, 1.15)}
-  //     position={new Vector3(obj.position.x, obj.position.y, obj.position.z)}
-  //   >
-  //     <boxGeometry
-  //       args={[
-  //         selectBox.max.x - selectBox.min.x,
-  //         selectBox.max.y - selectBox.min.y,
-  //         selectBox.max.z - selectBox.min.z,
-  //       ]}
-  //     />
-  //     <meshStandardMaterial color="ivory" transparent opacity={0.3} />
-  //   </mesh>
-  // );
 };
 
 const OtherUserCamera = () => {
@@ -466,7 +437,10 @@ const TheModel = () => {
     }
     if (action === "position") {
       target.position.set(value[0], value[1], value[2]);
-      setEditorSceneDataUpdated(id);
+      setEditorSceneDataUpdated({
+        id,
+        updatedAt: Date.now(),
+      });
       // target.updateMatrix();
     } else {
       console.log("Unknown action", { modelDataModified });
@@ -484,7 +458,7 @@ const Hotspots = () => {
 const EditorCanvasRenderer = (props: EditorCanvasProps) => {
   // const setUserSelectedObject = useSetAtom(editorUserSelectedObject);
   const { scene } = useThree();
-  console.log({ scene });
+  // console.log({ scene });
 
   // const [userSelectBox, setUserSelectBox] = useState<React.ReactNode | null>(
   //   null
@@ -499,16 +473,6 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
       <ambientLight />
       <UserSelectBox></UserSelectBox>
       <TheModel></TheModel>
-      {/* basic cube */}
-      {/* <mesh
-        position={new Vector3(0, 0, 0)}
-        onClick={(e) => {
-          setUserSelectedObject(e.object.id);
-        }}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="hotpink" />
-      </mesh> */}
     </>
   );
 };

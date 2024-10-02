@@ -141,7 +141,7 @@ export const threeToRootNode = (
     data: dataPart,
   };
 
-  console.log(decomposed.object.children);
+  //   console.log(decomposed.object.children);
   //   decomposed.object.children
   const root: DataNode = {
     parentId: null,
