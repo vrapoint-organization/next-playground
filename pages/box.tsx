@@ -239,6 +239,17 @@ const CanvasElements = ({ doSpeak, setRoot }) => {
     const root = threeToRootNode(data);
     console.log(root);
     setRoot(root);
+
+    // const rootString = JSON.stringify(root);
+    // console.log(rootString);
+    // create link and download
+    // const a = document.createElement("a");
+    // const blob = new Blob([rootString], { type: "application/json" });
+    // const url = URL.createObjectURL(blob);
+    // a.href = url;
+    // a.download = "root.json";
+    // a.click();
+    // URL.revokeObjectURL(url);
   };
 
   useEffect(() => {

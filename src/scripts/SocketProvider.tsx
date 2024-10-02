@@ -16,6 +16,7 @@ interface SocketContextType {
   disconnect: () => void;
   isConnected: boolean;
   socket: MutableRefObject<Client | null>;
+  session: MutableRefObject<string | null>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -33,6 +34,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Client | null>(null);
+  const sessionRef = useRef<string | null>(null);
 
   const connect = async (token: string) => {
     if (socketRef.current) {
@@ -51,7 +53,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         {
           Authorization: token,
         },
-        () => {
+        (iframe) => {
+          console.log({ iframe });
+          sessionRef.current = iframe.headers["user-name"];
+          console.log("SessionRef:", sessionRef.current);
           setIsConnected(true);
           resolve(true);
         },
@@ -87,6 +92,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     socketRef.current?.deactivate();
     socketRef.current?.forceDisconnect();
     socketRef.current = null;
+    sessionRef.current = null;
+    setIsConnected(false);
     console.log("Deactivated socket");
   };
 
@@ -101,6 +108,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         disconnect,
         isConnected,
         socket: socketRef,
+        session: sessionRef,
       }}
     >
       {children}

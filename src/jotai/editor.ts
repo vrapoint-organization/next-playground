@@ -82,3 +82,8 @@ export const editorUserCameraMatrix = atom<Matrix4>(new Matrix4().identity());
 export const editorUserCameraInfo = atom<EditorUserCameraInfoType>({
   updatedAt: 0,
 });
+
+export const editorUserSelectedObject = atom<number | null>(null);
+
+export type EditorStatus = "loading" | "failed" | "success" | "reconnecting";
+export const editorStatus = atom<EditorStatus>("loading");

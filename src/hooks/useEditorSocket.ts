@@ -4,7 +4,7 @@ import { Client } from "@stomp/stompjs";
 import { getCookie } from "cookies-next";
 import ENV_PUBLIC from "../scripts/ENV_PUBLIC";
 import EditorDataChannelHandler from "../scripts/EditorDataChannelHandler";
-import EditorFlowChannelHandler from "../scripts/EditorFlowChannelHandler";
+// import EditorFlowChannelHandler from "../scripts/EditorFlowChannelHandler";
 
 const safeSocket = (socketRef: MutableRefObject<Client | null>) => {
   const socket = socketRef.current;
@@ -34,10 +34,9 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     props ?? {};
 
   const urls = {
-    subDataUrl: `/user/sub/editor/${productId}/data`,
-    pubDataUrl: `/pub/editor/${productId}/data`,
-    subFlowUrl: `/sub/editor/${productId}/flow`,
-    pubFlowUrl: `/pub/editor/${productId}/flow`,
+    subUrl: `/user/sub/editor/${productId}/flow`,
+    pubUrl: `/pub/editor/${productId}/flow`,
+    // subGeneralUrl: `/sub/editor/${productId}/flow`,
   };
 
   const checkBeforeSocketInteraction = () => {
@@ -51,47 +50,47 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     //   throw new Error("flowHandler is required");
     // }
   };
-  const subscribeData = () => {
+  const subscribeEditor = () => {
     checkBeforeSocketInteraction();
     const socket = safeSocket(socketRef);
-    socket.subscribe(urls.subDataUrl, EditorDataChannelHandler);
+    socket.subscribe(urls.subUrl, EditorDataChannelHandler);
     console.log("subscribed to Data channel");
   };
 
-  const subscribeFlow = () => {
-    checkBeforeSocketInteraction();
-    const socket = safeSocket(socketRef);
-    socket.subscribe(urls.subFlowUrl, EditorFlowChannelHandler);
-    console.log("subscribed to Flow channel");
-  };
+  // const subscribeFlow = () => {
+  //   checkBeforeSocketInteraction();
+  //   const socket = safeSocket(socketRef);
+  //   socket.subscribe(urls.subGeneralUrl, EditorFlowChannelHandler);
+  //   console.log("subscribed to Flow channel");
+  // };
 
-  const publishData = (data: any) => {
-    checkBeforeSocketInteraction();
-    const socket = safeSocket(socketRef);
-    socket.publish({
-      destination: urls.pubDataUrl,
-      // body: compressData(data),
-      body: JSON.stringify(data),
-    });
-  };
+  // const publishData = (data: any) => {
+  //   checkBeforeSocketInteraction();
+  //   const socket = safeSocket(socketRef);
+  //   socket.publish({
+  //     destination: urls.pubDataUrl,
+  //     // body: compressData(data),
+  //     body: JSON.stringify(data),
+  //   });
+  // };
 
   const publishFlow = (data: any) => {
     checkBeforeSocketInteraction();
     const socket = safeSocket(socketRef);
     socket.publish({
-      destination: urls.pubFlowUrl,
+      destination: urls.pubUrl,
       // body: compressData(data),
       body: JSON.stringify(data),
     });
   };
 
-  const cleanup = () => {
+  const cleanupEditor = () => {
     console.log("Unsub");
-    socketRef.current?.unsubscribe(urls.subDataUrl);
-    socketRef.current?.unsubscribe(urls.subFlowUrl);
-    socketRef.current?.deactivate();
-    socketRef.current?.forceDisconnect();
-    socketRef.current = null;
+    socketRef.current?.unsubscribe(urls.subUrl);
+    // socketRef.current?.unsubscribe(urls.subGeneralUrl);
+    // socketRef.current?.deactivate();
+    // socketRef.current?.forceDisconnect();
+    // socketRef.current = null;
   };
 
   useEffect(() => {
@@ -129,22 +128,22 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
         // subscribe 시도
         if (productId) {
           // socket.sub;
-          subscribeData();
-          subscribeFlow();
+          subscribeEditor();
+          // subscribeFlow();
         }
       }
     };
 
     onEditorSocketMount();
 
-    return cleanup;
+    return cleanupEditor;
   }, []);
   return {
     ...socketExports,
-    cleanup,
-    subscribeData,
-    subscribeFlow,
-    publishData,
+    cleanupEditor,
+    subscribeEditor,
+    // subscribeFlow,
+    // publishData,
     publishFlow,
   };
 }

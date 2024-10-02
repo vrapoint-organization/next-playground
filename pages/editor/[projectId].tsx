@@ -3,11 +3,17 @@ import useEditorSocket from "@/src/hooks/useEditorSocket";
 import { GetServerSidePropsContext } from "next";
 import LeftPanel from "@/src/components/editor/LeftPanel";
 import RightPanel from "@/src/components/editor/RightPanel";
-import { editorStore, editorUserAtom } from "@/src/jotai/editor";
+import {
+  editorStatus as editorStatusAtom,
+  editorStore,
+  editorUserAtom,
+} from "@/src/jotai/editor";
 import Link from "next/link";
 import EditorCanvas from "@/src/components/editor/EditorCanvas";
 import { useRouter } from "next/router";
 import JotaiSSRProvider from "@/src/jotai/JotaiSSRProvider";
+import { useEffect, useMemo } from "react";
+import { useAtom } from "jotai";
 
 export default function Editor({
   myId,
@@ -26,18 +32,13 @@ export default function Editor({
     },
   });
 
-  const { isConnected, publishData, publishFlow } = socketExports;
+  const { isConnected, publishFlow, session } = socketExports;
 
-  if (!isConnected) {
-    return (
-      <div>
-        {/* Not Connected */}
-        연결 중...
-        <br></br>
-        <Link href="/editor">Back to connect</Link>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (isConnected) {
+      console.log("Session ID : ", session.current);
+    }
+  }, [isConnected]);
 
   const ControlPanel = () => (
     <div
@@ -52,13 +53,13 @@ export default function Editor({
     >
       ControlPanel
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <button
+        {/* <button
           onClick={() => {
             publishData({ type: "REVIEW", id: "" });
           }}
         >
           Data
-        </button>
+        </button> */}
         <button
           onClick={() => {
             publishFlow({
@@ -78,6 +79,82 @@ export default function Editor({
 
   console.log("ProjectId rendered");
 
+  const [status, setStatus] = useAtom(editorStatusAtom);
+  useEffect(() => {
+    if (!true) {
+      setTimeout(() => {
+        setStatus("success");
+      }, 1000);
+    } else {
+      fetch("/node/twobox.json")
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("twobox", data);
+          setStatus("success");
+        });
+    }
+  }, []);
+
+  const TheContent = useMemo(() => {
+    switch (status) {
+      case "loading":
+        return (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            Loading...
+          </div>
+        );
+      case "success":
+        return (
+          <>
+            <EditorCanvas
+              socketExports={socketExports}
+              userId={myId}
+            ></EditorCanvas>
+            <LeftPanel></LeftPanel>
+            <RightPanel></RightPanel>
+            <ControlPanel></ControlPanel>
+          </>
+        );
+      default:
+        return <div>구현되지 않은 status : {status}</div>;
+    }
+  }, [status]);
+
+  // if (status === "loading") {
+  //   return (
+  //     <div
+  //       style={{
+  //         width: "100%",
+  //         height: "100%",
+  //         display: "flex",
+  //         alignItems: "center",
+  //         justifyContent: "center",
+  //       }}
+  //     >
+  //       Loading...
+  //     </div>
+  //   );
+  // }
+
+  if (!isConnected) {
+    return (
+      <div>
+        {/* Not Connected */}
+        연결 중...
+        <br></br>
+        <Link href="/editor">Back to connect</Link>
+      </div>
+    );
+  }
+
   return (
     // <Provider store={editorStore}>
     <JotaiSSRProvider
@@ -88,18 +165,13 @@ export default function Editor({
           {
             id: myId,
             name: `User${myId}`,
+            sessionId: session.current,
           },
         ],
       ]}
     >
       <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
-        <EditorCanvas
-          userId={myId}
-          socketExports={socketExports}
-        ></EditorCanvas>
-        <LeftPanel></LeftPanel>
-        <RightPanel></RightPanel>
-        <ControlPanel></ControlPanel>
+        {TheContent}
       </div>
     </JotaiSSRProvider>
   );

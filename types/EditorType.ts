@@ -14,6 +14,7 @@ export interface CameraAtomType {
 
 export interface EditorUserAtomType {
   id: string;
+  sessionId: string;
   name?: string;
 }
 

@@ -1,17 +1,29 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Sphere, Text } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
+import {
+  BoxGeometry,
+  Camera,
+  Euler,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  Object3D,
+  Quaternion,
+  Vector3,
+} from "three";
 
 import type { EditorSocketExports } from "@/src/hooks/useEditorSocket";
 import {
   editorCamerasAtom,
   editorReviewAtom,
+  editorStatus,
   editorUserCameraInfo,
   editorUserCameraMatrix,
+  editorUserSelectedObject,
 } from "@/src/jotai/editor";
-import { OrbitControls, Sphere, Text } from "@react-three/drei";
-import { useThree } from "@react-three/fiber";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useMemo, useRef } from "react";
-import { Camera, Euler, Matrix4, Quaternion, Vector3 } from "three";
 
 export type EditorCanvasProps = {
   userId: string;
@@ -119,36 +131,6 @@ const randomColorFromString = (str: string) => {
   );
 };
 
-const refineEditorData = (
-  // myId: string,
-  data: { id: string; matrix: number[] | Matrix4 }[]
-) => {
-  // console.log(data);
-  return (
-    data
-      //   .filter((d) => d.id !== myId)
-      .map((d) => {
-        if (d.matrix instanceof Matrix4) {
-          return {
-            camera: d.matrix,
-            name: d.id,
-            color: randomColorFromString(d.id),
-            id: d.id,
-          };
-        }
-
-        const mat = new Matrix4();
-        mat.fromArray(d.matrix);
-        return {
-          camera: mat,
-          name: d.id,
-          color: randomColorFromString(d.id),
-          id: d.id,
-        };
-      })
-  );
-};
-
 // 캔버스로부터 WriteonlyAtom이 업데이트되면 서버로 값들을 보낸다
 const useUpdateWriteonlyAtoms = (
   props: EditorCanvasProps & {
@@ -156,22 +138,25 @@ const useUpdateWriteonlyAtoms = (
   }
 ) => {
   const { userId, socketExports, myCameraRef } = props;
-  const { publishData, publishFlow } = socketExports;
+  const { publishFlow } = socketExports;
   // const cameraInfo = useAtomValue(editorUserCameraMatrix);
   const cameraInfo = useAtomValue(editorUserCameraInfo);
   const _setUserCameraMatrix = useSetAtom(editorUserCameraMatrix);
   const _setUserCameraInfo = useSetAtom(editorUserCameraInfo);
   const setUserCameraMatrix = (matrix: Matrix4) => {
+    // TODO : 매트릭스와 인포가 동시에 바뀔거라는 보장이 없다
+    // 그런데 매트릭스와 인포를 하나의 아톰에서 관리하게되면 매트릭스가 계속 바뀌어서
+    // 캔버스의 카메라가 날뛰게 됨
     _setUserCameraMatrix(matrix);
     _setUserCameraInfo({ updatedAt: Date.now() });
   };
+  const setUserSelectedObject = useSetAtom(editorUserSelectedObject);
 
   // console.log({ writeonlyUserCamera });
   const lastSent = useRef(0);
 
+  // 카메라 정보가 업데이트되면 서버로 보낸다
   useEffect(() => {
-    // console.log({ uefwriteonlyUserCamera: writeonlyUserCamera });
-
     const now = Date.now();
     const canSend = now - lastSent.current > 100;
     if (canSend) {
@@ -190,6 +175,7 @@ const useUpdateWriteonlyAtoms = (
 
   return {
     setUserCameraMatrix,
+    setUserSelectedObject,
   };
 };
 
@@ -221,7 +207,7 @@ const CameraController = (props: EditorCanvasProps) => {
     rootCamera.applyMatrix4(myCameraMatrix);
   }, [myCameraMatrix]);
 
-  useEffect(() => {}, []);
+  // useEffect(() => {}, []);
 
   return (
     <OrbitControls
@@ -240,11 +226,36 @@ const CameraController = (props: EditorCanvasProps) => {
   );
 };
 
-// 밖에서 넣어주는 데이터로 그림만 그리는 컴포넌트
-const EditorCanvasRenderer = (props: EditorCanvasProps) => {
-  const cameraAtom = useAtomValue(editorCamerasAtom);
-  const reviewAtom = useAtomValue(editorReviewAtom);
+const UserSelectBox = () => {
+  const userSelectedObject = useAtomValue(editorUserSelectedObject);
+  const { scene } = useThree();
 
+  if (!userSelectedObject) {
+    return null;
+  }
+
+  const obj = scene.getObjectById(userSelectedObject);
+  console.log("Selected:", obj);
+
+  (obj as Mesh).geometry.computeBoundingBox();
+  const selectBox = (obj as Mesh).geometry.boundingBox!;
+
+  return (
+    <mesh scale={new Vector3(1.15, 1.15, 1.15)}>
+      <boxGeometry
+        args={[
+          selectBox.max.x - selectBox.min.x,
+          selectBox.max.y - selectBox.min.y,
+          selectBox.max.z - selectBox.min.z,
+        ]}
+      />
+      <meshStandardMaterial color="ivory" transparent opacity={0.3} />
+    </mesh>
+  );
+};
+
+const OtherUserCamera = () => {
+  const cameraAtom = useAtomValue(editorCamerasAtom);
   return (
     <>
       {cameraAtom.cameras.map((camera) => {
@@ -256,6 +267,14 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
           ></LineFromMatrix>
         );
       })}
+    </>
+  );
+};
+
+const UserReviews = () => {
+  const reviewAtom = useAtomValue(editorReviewAtom);
+  return (
+    <>
       {reviewAtom.reviews.map((review) => {
         return (
           <>
@@ -287,15 +306,43 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
           </>
         );
       })}
+    </>
+  );
+};
+
+const Hotspots = () => {
+  return null;
+};
+
+// 밖에서 넣어주는 데이터로 그림만 그리는 컴포넌트
+const EditorCanvasRenderer = (props: EditorCanvasProps) => {
+  const setUserSelectedObject = useSetAtom(editorUserSelectedObject);
+
+  // const [userSelectBox, setUserSelectBox] = useState<React.ReactNode | null>(
+  //   null
+  // );
+
+  return (
+    <>
+      <OtherUserCamera></OtherUserCamera>
+      <UserReviews></UserReviews>
+      <Hotspots></Hotspots>
+      <CameraController {...props}></CameraController>
+
+      <ambientLight />
+      {/* <directionalLight position={[0, 0, 5]} color="red" /> */}
+      <UserSelectBox></UserSelectBox>
+
       {/* basic cube */}
-      <mesh position={new Vector3(0, -1, 0)}>
+      <mesh
+        position={new Vector3(0, 0, 0)}
+        onClick={(e) => {
+          setUserSelectedObject(e.object.id);
+        }}
+      >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="hotpink" />
       </mesh>
-      <ambientLight />
-      {/* <directionalLight position={[0, 0, 5]} color="red" /> */}
-      <CameraController {...props}></CameraController>
-      {/* <Stats /> */}
     </>
   );
 };
@@ -306,8 +353,15 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
 // ex. 카메라 포지션 변경 시 WS 퍼블리시, 셀렉트 시 WS 퍼블리시 등
 // 참고 : 직접적으로 sub된 데이터를 핸들링하는 파트는 useEditorSocket에서만 할 것
 const EditorCanvas = (props: EditorCanvasProps) => {
+  const setEditorUserSelectedObject = useSetAtom(editorUserSelectedObject);
+
   return (
-    <Canvas style={{ width: "100%", height: "100%" }}>
+    <Canvas
+      style={{ width: "100%", height: "100%" }}
+      onPointerMissed={() => {
+        setEditorUserSelectedObject(null);
+      }}
+    >
       <EditorCanvasRenderer
         {...props}
         // onCameraChange={functions.onCameraChange}
