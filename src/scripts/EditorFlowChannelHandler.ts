@@ -1,5 +1,5 @@
 import { IMessage } from "@stomp/stompjs";
-import { getEditorUserAtom, setEditorCamerasAtom } from "../jotai/editor";
+import { getEditorUserAtom, setEditorParticipantAtom } from "../jotai/editor";
 import { Matrix4 } from "three";
 
 export interface FlowFunction {}
@@ -11,7 +11,7 @@ const EditorFlowChannelHandler = (msg: IMessage) => {
   // handler[data.type](data.data);
   const { id, matrix } = data.data;
   const thisUser = getEditorUserAtom()!;
-  setEditorCamerasAtom((prev) => {
+  setEditorParticipantAtom((prev) => {
     const newCameraData = {
       id,
       name: `Camera of ${id}`,

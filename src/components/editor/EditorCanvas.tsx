@@ -18,7 +18,7 @@ import {
 
 import type { EditorSocketExports } from "@/src/hooks/useEditorSocket";
 import {
-  editorCamerasAtom,
+  editorParticipantAtom,
   editorModelData,
   editorModelDataModified,
   editorReviewAtom,
@@ -29,6 +29,7 @@ import {
   editorUserSelectedObject,
 } from "@/src/jotai/editor";
 import { analyzeNode, DataNode } from "@/src/scripts/VNode";
+import { ParticipantState } from "@/types/EditorType";
 
 export type EditorCanvasProps = {
   userId: string;
@@ -227,6 +228,10 @@ const CameraController = (props: EditorCanvasProps) => {
 
   // useEffect(() => {}, []);
 
+  useEffect(() => {
+    setUserCameraMatrix(rootCamera.matrix);
+  }, []);
+
   return (
     <OrbitControls
       camera={rootCamera}
@@ -244,6 +249,58 @@ const CameraController = (props: EditorCanvasProps) => {
   );
 };
 
+const SingleSelectBox = (props: {
+  objectUuid?: string | null;
+  color?: string;
+  opacity?: number;
+  scaleFactor?: number;
+}) => {
+  const { scene } = useThree();
+  if (!props.objectUuid) {
+    return null;
+  }
+
+  const {
+    objectUuid,
+    color: inputColor,
+    opacity: inputOpacity,
+    scaleFactor: inputScaleFactor,
+  } = props;
+
+  // default values
+  const color = inputColor ?? "ivory";
+  const opacity = inputOpacity ?? 0.5;
+  const scaleFactor = inputScaleFactor ?? 1.15;
+
+  // 바운딩박스 계산
+  const obj = scene.getObjectByProperty("uuid", objectUuid);
+
+  if (!obj) {
+    return null;
+  }
+  (obj as Mesh).geometry.computeBoundingBox();
+  const selectBox = (obj as Mesh).geometry.boundingBox!;
+  const position = obj.position.clone();
+
+  return (
+    <mesh
+      scale={new Vector3(scaleFactor, scaleFactor, scaleFactor)}
+      position={position}
+    >
+      <boxGeometry
+        args={[
+          selectBox.max.x - selectBox.min.x,
+          selectBox.max.y - selectBox.min.y,
+          selectBox.max.z - selectBox.min.z,
+        ]}
+      />
+      <meshStandardMaterial color={color} transparent opacity={opacity} />
+    </mesh>
+  );
+
+  return;
+};
+
 const UserSelectBox = () => {
   const userSelectedObject = useAtomValue(editorUserSelectedObject);
   const modifiedModelData = useAtomValue(editorSceneDataUpdated);
@@ -251,18 +308,10 @@ const UserSelectBox = () => {
     id: string | string[];
     updatedAt: number;
   } | null>(null);
-  // console.log({ userSelectedObject, modifiedModelData });
-  const { scene } = useThree();
-  const computeMeshArgs: () => {
-    position: Vector3;
-    boxArgs: [
-      width?: number | undefined,
-      height?: number | undefined,
-      depth?: number | undefined
-    ];
-  } | null = () => {
+
+  const drawUserSelectBox: boolean = (() => {
     if (!userSelectedObject) {
-      return null;
+      return false;
     }
 
     const modelHasChanged = (() => {
@@ -295,7 +344,7 @@ const UserSelectBox = () => {
       // 변화된 모델 데이터가 셀렉트 된 오브젝트와 일치하지 않으면 null
       if (Array.isArray(modifiedModelData)) {
         if (!modifiedModelData.includes(userSelectedObject.id)) {
-          return null;
+          return false;
         }
       }
 
@@ -303,59 +352,123 @@ const UserSelectBox = () => {
         typeof modifiedModelData === "string" &&
         modifiedModelData !== userSelectedObject.id
       ) {
-        return null;
+        return false;
       }
     }
 
-    const obj = scene.getObjectByProperty("uuid", userSelectedObject.id);
+    return true;
+  })();
 
-    if (!obj) {
-      return null;
-    }
-    (obj as Mesh).geometry.computeBoundingBox();
-    const selectBox = (obj as Mesh).geometry.boundingBox!;
-    const pos = obj.position.clone();
-
-    // console.log("Updated", obj.position);
-    // debugger;
-
-    return {
-      position: pos,
-      boxArgs: [
-        selectBox.max.x - selectBox.min.x,
-        selectBox.max.y - selectBox.min.y,
-        selectBox.max.z - selectBox.min.z,
-      ],
-    };
-  };
-  const meshArgs = computeMeshArgs();
-  if (!meshArgs) {
+  if (!drawUserSelectBox) {
     return null;
   }
 
-  const { position, boxArgs } = meshArgs;
+  return (
+    <SingleSelectBox objectUuid={userSelectedObject?.id}></SingleSelectBox>
+  );
+};
+
+const ParticipantCamera = (participant: ParticipantState) => {
+  const { camera, color, name, uid, sessionId } = participant;
+  return <LineFromMatrix matrix={camera.matrix} color={color}></LineFromMatrix>;
+};
+
+const ParticipantSelectBox = (participant: ParticipantState) => {
+  const { selectedObject, color, name, uid, sessionId } = participant;
+  const { objectUuid } = selectedObject;
+
+  const modifiedModelData = useAtomValue(editorSceneDataUpdated);
+  const prevModifiedModelData = useRef<{
+    id: string | string[];
+    updatedAt: number;
+  } | null>(null);
+
+  const drawUserSelectBox: boolean = (() => {
+    if (!objectUuid) {
+      return false;
+    }
+
+    const modelHasChanged = (() => {
+      //바뀌었는지 체크
+      if (!prevModifiedModelData.current) {
+        return true;
+      }
+
+      if (!modifiedModelData) {
+        return false;
+      }
+
+      if (
+        prevModifiedModelData.current.updatedAt > modifiedModelData.updatedAt
+      ) {
+        return false;
+      }
+
+      if (Array.isArray(prevModifiedModelData.current?.id)) {
+        return prevModifiedModelData.current.id.every((id) => {
+          return !modifiedModelData?.id.includes(id);
+        });
+      }
+      return prevModifiedModelData.current.id !== modifiedModelData?.id;
+    })();
+    prevModifiedModelData.current = modifiedModelData;
+
+    // 셀렉트는 유지이지만 모델이 변경되었을 때
+    if (modelHasChanged && modifiedModelData) {
+      // 변화된 모델 데이터가 셀렉트 된 오브젝트와 일치하지 않으면 null
+      if (Array.isArray(modifiedModelData)) {
+        if (!modifiedModelData.includes(objectUuid)) {
+          return false;
+        }
+      }
+
+      if (
+        typeof modifiedModelData === "string" &&
+        modifiedModelData !== objectUuid
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  })();
+
+  if (!drawUserSelectBox) {
+    return null;
+  }
 
   return (
-    <mesh scale={new Vector3(1.15, 1.15, 1.15)} position={position}>
-      <boxGeometry args={boxArgs} />
-      <meshStandardMaterial color="ivory" transparent opacity={0.5} />
-    </mesh>
+    <SingleSelectBox objectUuid={objectUuid} color={color}></SingleSelectBox>
   );
 };
 
 const OtherUserCamera = () => {
-  const cameraAtom = useAtomValue(editorCamerasAtom);
+  const participants = useAtomValue(editorParticipantAtom);
+  console.log({ participants });
+
   return (
     <>
-      {cameraAtom.cameras.map((camera) => {
-        return (
-          <LineFromMatrix
-            matrix={camera.camera}
-            color={camera.color}
-            key={camera.id}
-          ></LineFromMatrix>
-        );
-      })}
+      {participants.map((participant) => (
+        <ParticipantCamera
+          {...participant}
+          key={`camera-of-${participant.sessionId}`}
+        ></ParticipantCamera>
+      ))}
+    </>
+  );
+};
+
+const OtherUserSelect = () => {
+  const participants = useAtomValue(editorParticipantAtom);
+
+  return (
+    <>
+      {participants.map((participant) => (
+        <ParticipantSelectBox
+          {...participant}
+          key={`select-of-${participant.sessionId}`}
+        ></ParticipantSelectBox>
+      ))}
     </>
   );
 };
@@ -467,6 +580,7 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
   return (
     <>
       <OtherUserCamera></OtherUserCamera>
+      <OtherUserSelect></OtherUserSelect>
       <UserReviews></UserReviews>
       <Hotspots></Hotspots>
       <CameraController {...props}></CameraController>

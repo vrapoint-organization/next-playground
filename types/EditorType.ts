@@ -7,6 +7,21 @@ export interface UserCamera {
   camera: Matrix4;
 }
 
+export interface ParticipantState {
+  name: string;
+  sessionId: string;
+  uid: string;
+  color: string;
+  camera: {
+    show: boolean;
+    matrix: Matrix4;
+  };
+  selectedObject: {
+    show: boolean;
+    objectUuid: string | null;
+  };
+}
+
 export interface CameraAtomType {
   showCameras?: boolean;
   cameras: UserCamera[];

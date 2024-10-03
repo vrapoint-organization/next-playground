@@ -284,7 +284,7 @@ export const threeToRootNode = (
     });
   };
 
-  decomposed.object.children!.forEach((child: any) => {
+  decomposed.object.children?.forEach((child: any) => {
     if (child.type === "Mesh") {
       const mesh = child as {
         geometry: string;

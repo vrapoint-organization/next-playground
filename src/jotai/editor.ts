@@ -1,5 +1,5 @@
 import {
-  CameraAtomType,
+  ParticipantState,
   EditorReviewAtomType,
   EditorUserAtomType,
 } from "@/types/EditorType";
@@ -16,19 +16,11 @@ import { string } from "three/webgpu";
 
 export const editorStore = createStore();
 
-export const defaultCameraAtomValue: CameraAtomType = {
-  showCameras: true,
-  cameras: [],
-};
-
-// 다른 이용자들의 카메라 정보
-// export const editorCamerasAtom = atom<CameraAtomType>({
-//   ...defaultCameraAtomValue,
-// });
-
+// 로그인되어 있는 내 세션 정보
 export const editorUserAtom = atom<EditorUserAtomType>();
 
 // 훅 내부가 아닌 일반 함수에서 전달받아서 사용하기 위헤 store.get
+// 예를 들면 EditorDataChannelHandler.ts
 const _getEditorAtom = editorStore.get;
 const _setEditorAtom = editorStore.set;
 
@@ -52,10 +44,11 @@ const _createAtomPair = <T = any>(
   ];
 };
 
-export const [editorCamerasAtom, getEditorCamerasAtom, setEditorCamerasAtom] =
-  _createAtomPair<CameraAtomType>({
-    ...defaultCameraAtomValue,
-  });
+export const [
+  editorParticipantAtom,
+  getEditorParticipantAtom,
+  setEditorParticipantAtom,
+] = _createAtomPair<ParticipantState[]>([] as ParticipantState[]);
 
 export const [editorReviewAtom, getEditorReviewAtom, setEditorReviewAtom] =
   _createAtomPair<EditorReviewAtomType>({ reviews: [] });

@@ -1,4 +1,4 @@
-import { editorCamerasAtom, editorModelData } from "@/src/jotai/editor";
+import { editorParticipantAtom, editorModelData } from "@/src/jotai/editor";
 import styled from "@emotion/styled";
 import { useAtomValue } from "jotai";
 import ObjectViewer from "../ObjectViewer";
@@ -7,7 +7,7 @@ import NodeTree from "../NodeTree";
 import { threeToRootNode } from "@/src/scripts/VNode";
 
 function LeftPanel() {
-  const cameras = useAtomValue(editorCamerasAtom);
+  const cameras = useAtomValue(editorParticipantAtom);
   //   console.log({ cameras });
   // console.log("LeftPanel");
   const node = useAtomValue(editorModelData);
@@ -17,7 +17,7 @@ function LeftPanel() {
     <Container>
       {/* LeftPanel */}
       <NodeTree node={node ? threeToRootNode(node) : null}></NodeTree>
-      <div>
+      {/* <div>
         {cameras.cameras.map((camera) => {
           // console.log("LeftPanelData:", { camera, mat: camera.camera });
           const pos = new Vector3();
@@ -30,7 +30,7 @@ function LeftPanel() {
             </div>
           );
         })}
-      </div>
+      </div> */}
     </Container>
   );
 }

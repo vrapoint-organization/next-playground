@@ -6,6 +6,7 @@ import RightPanel from "@/src/components/editor/RightPanel";
 import {
   editorModelDataModified,
   editorNode,
+  editorParticipantAtom,
   editorStatus as editorStatusAtom,
   editorStore,
   editorUserAtom,
@@ -17,10 +18,44 @@ import JotaiSSRProvider from "@/src/jotai/JotaiSSRProvider";
 import { useEffect, useMemo } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import * as THREE from "three";
+import { ParticipantState } from "@/types/EditorType";
 export type EditorProps = {
   myId: string;
   projectId: string;
 };
+
+const generateRandomHexColor = () => {
+  return "#" + Math.floor(Math.random() * 16777215).toString(16);
+};
+
+const createRandomUser = (name: string): ParticipantState => {
+  const thisUid = name + "-id";
+  const thisSessionId = name + "-sessionid";
+  const color = generateRandomHexColor();
+  const initialCamera = new Matrix4().identity();
+  const randomPosition = new THREE.Vector3(
+    Math.random() * 3,
+    Math.random() * 3,
+    Math.random() * 3
+  );
+  initialCamera.setPosition(randomPosition);
+  const retval: ParticipantState = {
+    uid: thisUid,
+    sessionId: thisSessionId,
+    color,
+    name,
+    camera: {
+      show: true,
+      matrix: initialCamera,
+    },
+    selectedObject: {
+      show: false,
+      objectUuid: null,
+    },
+  };
+  return retval;
+};
+
 const _Editor = ({ myId, projectId }: EditorProps) => {
   const router = useRouter();
   const socketExports = useEditorSocket({
@@ -33,6 +68,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
   });
 
   const setModifiedModelData = useSetAtom(editorModelDataModified);
+  const setParticipants = useSetAtom(editorParticipantAtom);
 
   const { isConnected, publishData, session } = socketExports;
 
@@ -119,6 +155,129 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
           >
             Move right box
           </button>
+          <div style={{ display: "flex" }}>
+            <button
+              onClick={() => {
+                setParticipants((prev) => {
+                  const user1 = createRandomUser("User1");
+                  const { sessionId } = user1;
+                  const copied = [...prev];
+                  const found = copied.find((p) => p.sessionId === sessionId);
+                  const filtered = copied.filter(
+                    (p) => p.sessionId !== sessionId
+                  );
+                  if (found) {
+                    return copied.filter((p) => p.sessionId !== sessionId);
+                  } else {
+                    filtered.push(user1);
+                    return filtered;
+                  }
+                });
+              }}
+            >
+              Toggle User1
+            </button>
+            <button
+              onClick={() => {
+                setParticipants((prev) => {
+                  const copied = [...prev];
+                  const user1 = copied.find((p) => p.name === "User1");
+                  if (!user1) return prev;
+                  const { sessionId } = user1;
+                  const randomPosition = new THREE.Vector3(
+                    Math.random() * 3 - 3,
+                    Math.random() * 3,
+                    Math.random() * 3
+                  );
+                  user1.camera.matrix.setPosition(randomPosition);
+                  return copied;
+                });
+              }}
+            >
+              Move User1 Camera
+            </button>
+            <button
+              onClick={() => {
+                setParticipants((prev) => {
+                  const copied = [...prev];
+                  const user1 = copied.find((p) => p.name === "User1");
+                  if (!user1) return prev;
+                  if (user1.selectedObject.objectUuid) {
+                    user1.selectedObject.objectUuid = null;
+                  } else {
+                    user1.selectedObject.objectUuid =
+                      "0a2d8a62-c09b-4833-a706-fb42f2523608";
+                    ("9d24b37d-93b5-4a0d-9718-c67bdeb23319");
+                  }
+
+                  return copied;
+                });
+              }}
+            >
+              User1 select left
+            </button>
+          </div>
+          <div style={{ display: "flex" }}>
+            <button
+              onClick={() => {
+                setParticipants((prev) => {
+                  const user2 = createRandomUser("User2");
+                  const { sessionId } = user2;
+                  const copied = [...prev];
+                  const found = copied.find((p) => p.sessionId === sessionId);
+                  const filtered = copied.filter(
+                    (p) => p.sessionId !== sessionId
+                  );
+                  if (found) {
+                    return copied.filter((p) => p.sessionId !== sessionId);
+                  } else {
+                    filtered.push(user2);
+                    return filtered;
+                  }
+                });
+              }}
+            >
+              Toggle User2
+            </button>
+            <button
+              onClick={() => {
+                setParticipants((prev) => {
+                  const copied = [...prev];
+                  const user2 = copied.find((p) => p.name === "User2");
+                  if (!user2) return prev;
+                  const { sessionId } = user2;
+                  const randomPosition = new THREE.Vector3(
+                    Math.random() * 3 + 3,
+                    Math.random() * 3,
+                    Math.random() * 3
+                  );
+                  user2.camera.matrix.setPosition(randomPosition);
+                  return copied;
+                });
+              }}
+            >
+              Move User2 Camera
+            </button>
+            <button
+              onClick={() => {
+                setParticipants((prev) => {
+                  const copied = [...prev];
+                  const user2 = copied.find((p) => p.name === "User2");
+                  if (!user2) return prev;
+                  if (user2.selectedObject.objectUuid) {
+                    user2.selectedObject.objectUuid = null;
+                  } else {
+                    user2.selectedObject.objectUuid =
+                      "9d24b37d-93b5-4a0d-9718-c67bdeb23319";
+                  }
+
+                  return copied;
+                });
+              }}
+            >
+              User2 select Right
+            </button>
+          </div>
         </div>
       </div>
     );
