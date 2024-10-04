@@ -1,4 +1,8 @@
-import { editorParticipantAtom, editorModelData } from "@/src/jotai/editor";
+import {
+  editorParticipantAtom,
+  editorModelDataAtom,
+  editorUserAtom,
+} from "@/src/jotai/editor";
 import styled from "@emotion/styled";
 import { useAtomValue } from "jotai";
 import ObjectViewer from "../ObjectViewer";
@@ -10,14 +14,17 @@ function LeftPanel() {
   const cameras = useAtomValue(editorParticipantAtom);
   //   console.log({ cameras });
   // console.log("LeftPanel");
-  const node = useAtomValue(editorModelData);
+  const node = useAtomValue(editorModelDataAtom);
+  const myInfo = useAtomValue(editorUserAtom);
 
   const rootNode = node ? threeToRootNode(node) : null;
-  console.log({ leftpanel: node });
-  console.log({ rootNode });
+  // console.log({ leftpanel: node });
+  // console.log({ rootNode });
 
   return (
     <Container>
+      <div>내 이름 : {myInfo?.name}</div>
+      <div>내 아이디 : {myInfo?.id}</div>
       {/* LeftPanel */}
       <NodeTree node={rootNode}></NodeTree>
       {/* <div>
@@ -46,6 +53,9 @@ const Container = styled.div`
   top: 20px;
   bottom: 20px;
   width: 200px;
-  background-color: #d0d0d0;
+  background-color: #ededed;
   z-index: 100;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 10px;
 `;

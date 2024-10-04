@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { DataNode } from "../scripts/VNode";
-import { editorUserSelectedObject } from "../jotai/editor";
+import { editorUserSelectedObjectAtom } from "../jotai/editor";
 import { useAtom } from "jotai";
 
 const typeMap: { [key in DataNode["type"]]: any } = {
@@ -16,19 +16,23 @@ const typeMap: { [key in DataNode["type"]]: any } = {
 };
 
 export interface NodeTreeProps {
-  node: DataNode;
+  node: DataNode | null;
   options?: any;
 }
 
 const RecursiveNodeTree = ({ node, options: inputOptions }: NodeTreeProps) => {
   const options = inputOptions || { depth: 0 };
   const childOption = { ...options, depth: options.depth + 1 };
+
+  const [selected, setSelected] = useAtom(editorUserSelectedObjectAtom);
+
+  if (!node) {
+    return null;
+  }
   const type = node.type;
   const name = type ? typeMap[type] : "노드";
   // console.log({ type });
   const isImage = ((node.data?.url ?? "") as string).startsWith("data:image");
-
-  const [selected, setSelected] = useAtom(editorUserSelectedObject);
 
   if (!node) return null;
   return (
@@ -77,7 +81,7 @@ const RecursiveNodeTree = ({ node, options: inputOptions }: NodeTreeProps) => {
   );
 };
 
-const NodeTree = (props: NodeTreeProps & { node?: DataNode | null }) => {
+const NodeTree = (props: NodeTreeProps) => {
   if (!props?.node) {
     return null;
   }

@@ -53,14 +53,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         {
           Authorization: token,
         },
-        (iframe) => {
+        (iframe: any) => {
           // console.log({ iframe });
           sessionRef.current = iframe.headers["user-name"];
           // console.log("SessionRef:", sessionRef.current);
           setIsConnected(true);
           resolve(true);
         },
-        (err) => {
+        (err: any) => {
           console.error("websocket Error, ", err);
           setIsConnected(false);
           if (err.body === "유효하지 않은 권한입니다.") {

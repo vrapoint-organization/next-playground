@@ -4,10 +4,10 @@ import { GetServerSidePropsContext } from "next";
 import LeftPanel from "@/src/components/editor/LeftPanel";
 import RightPanel from "@/src/components/editor/RightPanel";
 import {
-  editorModelDataModified,
-  editorNode,
+  editorModelDataModifiedAtom,
+  editorNodeAtom,
   editorParticipantAtom,
-  editorStatus as editorStatusAtom,
+  editorStatusAtom as editorStatusAtom,
   editorStore,
   editorUserAtom,
 } from "@/src/jotai/editor";
@@ -19,6 +19,7 @@ import { useEffect, useMemo } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import * as THREE from "three";
 import { ParticipantState } from "@/types/EditorType";
+import objectHash from "object-hash";
 export type EditorProps = {
   myId: string;
   projectId: string;
@@ -67,7 +68,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
     },
   });
 
-  const setModifiedModelData = useSetAtom(editorModelDataModified);
+  const setModifiedModelData = useSetAtom(editorModelDataModifiedAtom);
   const setParticipants = useSetAtom(editorParticipantAtom);
 
   const { isConnected, publishData, session } = socketExports;
@@ -104,7 +105,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
           >
             Data
           </button>
-          <button
+          {/* <button
             onClick={() => {
               publishData({
                 type: "REVIEW",
@@ -116,20 +117,26 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
             }}
           >
             Flow
-          </button>
+          </button> */}
           <button
             onClick={() => {
+              //@ts-ignore
               setModifiedModelData((prev) => {
                 const x = Math.random() * 2 - 1;
                 const y = Math.random() * 2 - 1;
                 const z = Math.random() * 2 - 1;
-                return {
+                const data = {
                   id: "0a2d8a62-c09b-4833-a706-fb42f2523608",
                   data: {
                     action: "position",
                     value: [x, y, z],
                   },
                   updatedAt: new Date().getTime(),
+                };
+                const datahash = objectHash(data);
+                return {
+                  data,
+                  hash: datahash,
                 };
               });
             }}
@@ -138,17 +145,23 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
           </button>
           <button
             onClick={() => {
+              //@ts-ignore
               setModifiedModelData((prev) => {
                 const x = Math.random() * 2 + 2;
                 const y = Math.random() * 2 - 1;
                 const z = Math.random() * 2 - 1;
-                return {
+                const data = {
                   id: "9d24b37d-93b5-4a0d-9718-c67bdeb23319",
                   data: {
                     action: "position",
                     value: [x, y, z],
                   },
                   updatedAt: new Date().getTime(),
+                };
+                const dataHash = objectHash(data);
+                return {
+                  data,
+                  hash: dataHash,
                 };
               });
             }}
@@ -158,6 +171,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
           <div style={{ display: "flex" }}>
             <button
               onClick={() => {
+                //@ts-ignore
                 setParticipants((prev) => {
                   const user1 = createRandomUser("User1");
                   const { sessionId } = user1;
@@ -179,6 +193,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
             </button>
             <button
               onClick={() => {
+                //@ts-ignore
                 setParticipants((prev) => {
                   const copied = [...prev];
                   const user1 = copied.find((p) => p.name === "User1");
@@ -198,6 +213,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
             </button>
             <button
               onClick={() => {
+                //@ts-ignore
                 setParticipants((prev) => {
                   const copied = [...prev];
                   const user1 = copied.find((p) => p.name === "User1");
@@ -220,6 +236,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
           <div style={{ display: "flex" }}>
             <button
               onClick={() => {
+                //@ts-ignore
                 setParticipants((prev) => {
                   const user2 = createRandomUser("User2");
                   const { sessionId } = user2;
@@ -241,6 +258,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
             </button>
             <button
               onClick={() => {
+                //@ts-ignore
                 setParticipants((prev) => {
                   const copied = [...prev];
                   const user2 = copied.find((p) => p.name === "User2");
@@ -260,6 +278,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
             </button>
             <button
               onClick={() => {
+                //@ts-ignore
                 setParticipants((prev) => {
                   const copied = [...prev];
                   const user2 = copied.find((p) => p.name === "User2");
@@ -306,15 +325,15 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
 const Editor = (props: EditorProps) => {
   const router = useRouter();
   const { myId, projectId } = props;
-  const socketExports = useEditorSocket({
-    productId: projectId,
-    // connectOnMount: true,
-    actionOnDisconnection() {
-      alert("소켓 연결 실패");
-      router.back();
-    },
-  });
-  const { session } = socketExports;
+  // const socketExports = useEditorSocket({
+  //   productId: projectId,
+  //   // connectOnMount: true,
+  //   actionOnDisconnection() {
+  //     alert("소켓 연결 실패");
+  //     router.back();
+  //   },
+  // });
+  // const { session } = socketExports;
 
   return (
     <JotaiSSRProvider
@@ -325,7 +344,7 @@ const Editor = (props: EditorProps) => {
           {
             id: myId,
             name: `User${myId}`,
-            sessionId: session.current,
+            // sessionId: session.current,
           },
         ],
       ]}

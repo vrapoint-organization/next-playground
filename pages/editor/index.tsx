@@ -37,7 +37,7 @@ export const getServerSideProps = () => {
   num = Math.round(num);
   return {
     props: {
-      myId: "MASTER" + num,
+      myId: num,
     },
   };
 };

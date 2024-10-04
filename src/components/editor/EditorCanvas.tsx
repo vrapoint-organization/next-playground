@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Sphere, Text } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import hash from "object-hash";
 import {
   BoxGeometry,
   Camera,
@@ -19,14 +20,14 @@ import {
 import type { EditorSocketExports } from "@/src/hooks/useEditorSocket";
 import {
   editorParticipantAtom,
-  editorModelData,
-  editorModelDataModified,
+  editorModelDataAtom,
+  editorModelDataModifiedAtom,
   editorReviewAtom,
-  editorSceneDataUpdated,
-  editorStatus,
-  editorUserCameraInfo,
-  editorUserCameraMatrix,
-  editorUserSelectedObject,
+  editorSceneDataUpdatedAtom,
+  editorStatusAtom,
+  editorUserCameraInfoAtom,
+  editorUserCameraMatrixAtom,
+  editorUserSelectedObjectAtom,
 } from "@/src/jotai/editor";
 import { analyzeNode, DataNode } from "@/src/scripts/VNode";
 import { ParticipantState } from "@/types/EditorType";
@@ -49,6 +50,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
 
   return (
     <>
+      {/*@ts-ignore*/}
       <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
@@ -61,6 +63,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         <lineBasicMaterial color={color} />
         <Sphere args={[0.02, 16, 16]} />
       </line>
+      {/*@ts-ignore*/}
       <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
@@ -72,6 +75,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         </bufferGeometry>
         <lineBasicMaterial color={color} />
       </line>
+      {/*@ts-ignore*/}
       <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
@@ -83,6 +87,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         </bufferGeometry>
         <lineBasicMaterial color={color} />
       </line>
+      {/*@ts-ignore*/}
       <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
@@ -94,6 +99,7 @@ function LineFromMatrix({ matrix, color }: { matrix: Matrix4; color: string }) {
         </bufferGeometry>
         <lineBasicMaterial color={color} />
       </line>
+      {/*@ts-ignore*/}
       <line position={position.toArray()} rotation={euler.toArray()}>
         <bufferGeometry>
           <bufferAttribute
@@ -146,9 +152,9 @@ const useUpdateWriteonlyAtoms = (
   const { userId, socketExports, myCameraRef } = props;
   const { publishData } = socketExports;
   // const cameraInfo = useAtomValue(editorUserCameraMatrix);
-  const cameraInfo = useAtomValue(editorUserCameraInfo);
-  const _setUserCameraMatrix = useSetAtom(editorUserCameraMatrix);
-  const _setUserCameraInfo = useSetAtom(editorUserCameraInfo);
+  const cameraInfo = useAtomValue(editorUserCameraInfoAtom);
+  const _setUserCameraMatrix = useSetAtom(editorUserCameraMatrixAtom);
+  const _setUserCameraInfo = useSetAtom(editorUserCameraInfoAtom);
   const setUserCameraMatrix = (matrix: Matrix4) => {
     // TODO : 매트릭스와 인포가 동시에 바뀔거라는 보장이 없다
     // 그런데 매트릭스와 인포를 하나의 아톰에서 관리하게되면 매트릭스가 계속 바뀌어서
@@ -156,7 +162,9 @@ const useUpdateWriteonlyAtoms = (
     _setUserCameraMatrix(matrix);
     _setUserCameraInfo({ updatedAt: Date.now() });
   };
-  const setUserSelectedObject = useSetAtom(editorUserSelectedObject);
+  const [userSelectedObject, setUserSelectedObject] = useAtom(
+    editorUserSelectedObjectAtom
+  );
 
   // console.log({ writeonlyUserCamera });
   const lastSent = useRef(0);
@@ -177,7 +185,7 @@ const useUpdateWriteonlyAtoms = (
     if (canSend) {
       lastSent.current = now;
       const matrix = myCameraRef.current.matrix;
-      console.log("Here");
+      // console.log("Here");
       publishData({
         type: "USER_STATE",
         data: {
@@ -185,12 +193,12 @@ const useUpdateWriteonlyAtoms = (
             matrix: matrix.toArray(),
           },
           selectedInfo: {
-            nodeId: undefined,
+            nodeId: userSelectedObject?.id ?? null,
           },
         } as StateSendData,
       });
     }
-  }, [cameraInfo.updatedAt]);
+  }, [cameraInfo.updatedAt, userSelectedObject]);
 
   return {
     setUserCameraMatrix,
@@ -199,7 +207,7 @@ const useUpdateWriteonlyAtoms = (
 };
 
 const useReadonlyAtoms = () => {
-  const userCameraMatrix = useAtomValue(editorUserCameraMatrix);
+  const userCameraMatrix = useAtomValue(editorUserCameraMatrixAtom);
 
   // useEffect(() => {
   //   console.log("userCameraInfo:", userCameraInfo.updatedAt);
@@ -254,6 +262,7 @@ const SingleSelectBox = (props: {
   color?: string;
   opacity?: number;
   scaleFactor?: number;
+  name?: string;
 }) => {
   const { scene } = useThree();
   if (!props.objectUuid) {
@@ -265,6 +274,7 @@ const SingleSelectBox = (props: {
     color: inputColor,
     opacity: inputOpacity,
     scaleFactor: inputScaleFactor,
+    name,
   } = props;
 
   // default values
@@ -284,27 +294,48 @@ const SingleSelectBox = (props: {
   const position = obj.position.clone();
 
   return (
-    <mesh
-      scale={new Vector3(scaleFactor, scaleFactor, scaleFactor)}
-      position={position}
-    >
-      <boxGeometry
-        args={[
-          selectBox.max.x - selectBox.min.x,
-          selectBox.max.y - selectBox.min.y,
-          selectBox.max.z - selectBox.min.z,
-        ]}
-      />
-      <meshStandardMaterial color={color} transparent opacity={opacity} />
-    </mesh>
+    <>
+      <mesh
+        scale={new Vector3(scaleFactor, scaleFactor, scaleFactor)}
+        position={position}
+      >
+        <boxGeometry
+          args={[
+            selectBox.max.x - selectBox.min.x,
+            selectBox.max.y - selectBox.min.y,
+            selectBox.max.z - selectBox.min.z,
+          ]}
+        />
+        <meshStandardMaterial color={color} transparent opacity={opacity} />
+      </mesh>
+      {name && (
+        <Text
+          // key={review.shortUuid}
+          position={
+            new Vector3(
+              position.x,
+              position.y + selectBox.max.y - selectBox.min.y,
+              position.z
+            )
+          }
+          scale={[0.5, 0.5, 0.5]}
+          color={color}
+          // show text on the right side
+          anchorX="center"
+          anchorY="middle"
+        >
+          {name}
+        </Text>
+      )}
+    </>
   );
 
   return;
 };
 
 const UserSelectBox = () => {
-  const userSelectedObject = useAtomValue(editorUserSelectedObject);
-  const modifiedModelData = useAtomValue(editorSceneDataUpdated);
+  const userSelectedObject = useAtomValue(editorUserSelectedObjectAtom);
+  const modifiedModelData = useAtomValue(editorSceneDataUpdatedAtom);
   const prevModifiedModelData = useRef<{
     id: string | string[];
     updatedAt: number;
@@ -365,12 +396,18 @@ const UserSelectBox = () => {
   }
 
   return (
-    <SingleSelectBox objectUuid={userSelectedObject?.id}></SingleSelectBox>
+    <SingleSelectBox
+      objectUuid={userSelectedObject?.id}
+      name={"Me"}
+    ></SingleSelectBox>
   );
 };
 
 const ParticipantCamera = (participant: ParticipantState) => {
   const { camera, color, name, uid, sessionId } = participant;
+  if (!camera.show) {
+    return null;
+  }
   return <LineFromMatrix matrix={camera.matrix} color={color}></LineFromMatrix>;
 };
 
@@ -378,7 +415,7 @@ const ParticipantSelectBox = (participant: ParticipantState) => {
   const { selectedObject, color, name, uid, sessionId } = participant;
   const { objectUuid } = selectedObject;
 
-  const modifiedModelData = useAtomValue(editorSceneDataUpdated);
+  const modifiedModelData = useAtomValue(editorSceneDataUpdatedAtom);
   const prevModifiedModelData = useRef<{
     id: string | string[];
     updatedAt: number;
@@ -439,22 +476,31 @@ const ParticipantSelectBox = (participant: ParticipantState) => {
   }
 
   return (
-    <SingleSelectBox objectUuid={objectUuid} color={color}></SingleSelectBox>
+    <>
+      <SingleSelectBox
+        objectUuid={objectUuid}
+        color={color}
+        name={name}
+      ></SingleSelectBox>
+    </>
   );
 };
 
 const OtherUserCamera = () => {
   const participants = useAtomValue(editorParticipantAtom);
-  console.log({ participants });
+  // console.log({ participants });
 
   return (
     <>
-      {participants.map((participant) => (
-        <ParticipantCamera
-          {...participant}
-          key={`camera-of-${participant.sessionId}`}
-        ></ParticipantCamera>
-      ))}
+      {participants.map((participant) => {
+        // console.log({ participant });
+        return (
+          <ParticipantCamera
+            {...participant}
+            key={`camera-of-${participant.sessionId}`}
+          ></ParticipantCamera>
+        );
+      })}
     </>
   );
 };
@@ -521,6 +567,9 @@ const getSceneObjectByUuid = <T = Object3D,>(
 ): T | undefined => {
   let found: T | undefined = undefined;
   scene.traverse((child) => {
+    if (found) {
+      return;
+    }
     if (child.userData?.nodeId === uuid) {
       found = child as T;
     }
@@ -529,9 +578,9 @@ const getSceneObjectByUuid = <T = Object3D,>(
 };
 
 const TheModel = () => {
-  const model = useAtomValue(editorModelData);
-  const modelDataModified = useAtomValue(editorModelDataModified);
-  const setEditorSceneDataUpdated = useSetAtom(editorSceneDataUpdated);
+  const model = useAtomValue(editorModelDataAtom);
+  const modelDataModified = useAtomValue(editorModelDataModifiedAtom);
+  const setEditorSceneDataUpdated = useSetAtom(editorSceneDataUpdatedAtom);
   const { scene } = useThree();
   // console.log({ Themodel: model });
   if (!model) {
@@ -561,11 +610,16 @@ const TheModel = () => {
   }, [model]);
 
   useEffect(() => {
-    if (!modelDataModified) {
+    const modifiedData = modelDataModified?.data;
+    if (!modifiedData) {
       return;
     }
-    const { id, data: modified } = modelDataModified;
-    const { action, value } = modified;
+
+    console.log({ modelDataModified, modifiedData });
+    const id = modifiedData.id;
+    const action = modifiedData.data.action;
+    const value = modifiedData.data.value;
+
     // const target = scene.getObjectByProperty("uuid", id);
     const target = getSceneObjectByUuid(scene, id);
 
@@ -617,16 +671,36 @@ const EditorCanvasRenderer = (props: EditorCanvasProps) => {
   );
 };
 
+const useUpdateServer = (socketExports: EditorSocketExports) => {
+  const { publishData } = socketExports;
+  const modelDataModified = useAtomValue(editorModelDataModifiedAtom);
+  useEffect(() => {
+    if (!modelDataModified) {
+      return;
+    }
+    // const hashValue = hash(modelDataModified.data);
+    publishData({
+      type: "ECHO",
+      data: {
+        destination: "model",
+        ...modelDataModified,
+      },
+    });
+  }, [modelDataModified]);
+};
+
 // <EditorCanvas> : 렌더러 + 데이터 핸들링
 // 그림은 EditorCanvasRenderer에서만 그리고
 // 여기서는 데이터를 주고 받는 역할까지 담당한다.
 // ex. 카메라 포지션 변경 시 WS 퍼블리시, 셀렉트 시 WS 퍼블리시 등
 // 참고 : 직접적으로 sub된 데이터를 핸들링하는 파트는 useEditorSocket에서만 할 것
 const EditorCanvas = (props: EditorCanvasProps) => {
-  const setEditorUserSelectedObject = useSetAtom(editorUserSelectedObject);
+  const setEditorUserSelectedObject = useSetAtom(editorUserSelectedObjectAtom);
 
-  const setModel = useSetAtom(editorModelData);
-  const setStatus = useSetAtom(editorStatus);
+  const setModel = useSetAtom(editorModelDataAtom);
+  const setStatus = useSetAtom(editorStatusAtom);
+
+  useUpdateServer(props.socketExports);
 
   useEffect(() => {
     if (!true) {

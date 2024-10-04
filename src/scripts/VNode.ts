@@ -129,9 +129,11 @@ export const threeToRootNode = (
   });
 
   // #2. scene meta
+  //@ts-ignore
   const metaPart = copied.metadata;
 
   // #3. object data part
+  //@ts-ignore
   const objectPart = copied.object;
 
   // 1차적으로 분해 완료
@@ -239,6 +241,7 @@ export const threeToRootNode = (
           uuid: string;
         };
         // const thisId = mesh.uuid;
+        //@ts-ignore
         const thisId = mesh.userData.nodeId;
         const meshNode = {
           parentId: parentNode.id,
@@ -346,6 +349,7 @@ export const nodeIdToThreeId = (
       return;
     }
     if (n.id === nodeId) {
+      //@ts-ignore
       retval = n.id;
     }
   });

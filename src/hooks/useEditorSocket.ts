@@ -5,6 +5,8 @@ import { getCookie } from "cookies-next";
 import ENV_PUBLIC from "../scripts/ENV_PUBLIC";
 import EditorDataChannelHandler from "../scripts/EditorDataChannelHandler";
 import useEffectOnce from "../scripts/useEffectOnce";
+import EditorFlowChannelHandler from "../scripts/EditorFlowChannelHandler";
+import { useRouter } from "next/router";
 // import EditorFlowChannelHandler from "../scripts/EditorFlowChannelHandler";
 
 const safeSocket = (socketRef: MutableRefObject<Client | null>) => {
@@ -45,6 +47,9 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     if (!productId) {
       throw new Error("productId is required. productId: " + productId);
     }
+    if (!socketExports.session.current) {
+      throw new Error("session is required");
+    }
     // if (!dataHandler) {
     //   throw new Error("dataHandler is required");
     // }
@@ -55,7 +60,11 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
   const subscribeEditor = () => {
     checkBeforeSocketInteraction();
     const socket = safeSocket(socketRef);
-    socket.subscribe(urls.subUrl, EditorDataChannelHandler);
+    // socket.subscribe(urls.subUrl, EditorDataChannelHandler);
+    socket.subscribe(
+      urls.subUrl,
+      EditorFlowChannelHandler(socketExports.session.current!)
+    );
     socket.publish({
       destination: urls.initialPubUrl,
       body: "",
@@ -99,6 +108,7 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
     // socketRef.current = null;
   };
 
+  const router = useRouter();
   useEffectOnce(() => {
     const onEditorSocketMount = async () => {
       // 어디든 첫 페이지 진입 시 연결 시도
@@ -108,9 +118,18 @@ export default function useEditorSocket(props?: useEditorSocketProps) {
         // 소켓연결이 없으면 연결 시도, 실패 시 얼리리턴
         if (!socket) {
           const random3digitNumber = Math.floor(Math.random() * 1000);
+          if (!ENV_PUBLIC.IS_DEV) {
+            throw new Error("배포환경에서는 MASTER 제거할것");
+          }
+          const myId = router.query.id;
+          if (!myId) {
+            throw new Error(
+              "No id found in router query. /editor/projectid?id=MASTER"
+            );
+          }
+          console.log({ myId });
           const token =
-            getCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS) ??
-            `MASTER${random3digitNumber}`;
+            getCookie(ENV_PUBLIC.NEXT_PUBLIC_USER_ACCESS) ?? `MASTER${myId}`;
           if (token) {
             let failed = null;
             console.log("isConnected:", socketExports.isConnected);

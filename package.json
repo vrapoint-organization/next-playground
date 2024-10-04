@@ -33,6 +33,7 @@
     "mui-modal-provider": "^2.4.2",
     "next": "14.2.11",
     "next-i18next": "^15.3.1",
+    "object-hash": "^3.0.0",
     "pako": "^2.1.0",
     "react": "^18",
     "react-dom": "^18",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@iamjam/envclass": "^0.2.9",
     "@types/node": "^20",
+    "@types/object-hash": "^3.0.6",
     "@types/pako": "^2.0.3",
     "@types/react": "^18",
     "@types/react-dom": "^18",
