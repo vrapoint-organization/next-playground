@@ -273,7 +273,8 @@ const SingleSelectBox = (props: {
   const scaleFactor = inputScaleFactor ?? 1.15;
 
   // 바운딩박스 계산
-  const obj = scene.getObjectByProperty("uuid", objectUuid);
+  // const obj = scene.getObjectByProperty("uuid", objectUuid);
+  const obj = getSceneObjectByUuid(scene, objectUuid);
 
   if (!obj) {
     return null;
@@ -314,8 +315,8 @@ const UserSelectBox = () => {
       return false;
     }
 
+    // 모델 데이터가 바뀌었을 때 박스도 업데이트
     const modelHasChanged = (() => {
-      //바뀌었는지 체크
       if (!prevModifiedModelData.current) {
         return true;
       }
@@ -512,6 +513,21 @@ const UserReviews = () => {
   );
 };
 
+const useUpdateModelData = () => {};
+
+const getSceneObjectByUuid = <T = Object3D,>(
+  scene: THREE.Scene,
+  uuid: string
+): T | undefined => {
+  let found: T | undefined = undefined;
+  scene.traverse((child) => {
+    if (child.userData?.nodeId === uuid) {
+      found = child as T;
+    }
+  });
+  return found;
+};
+
 const TheModel = () => {
   const model = useAtomValue(editorModelData);
   const modelDataModified = useAtomValue(editorModelDataModified);
@@ -529,9 +545,16 @@ const TheModel = () => {
     //   scene.remove(...copied);
     // };
     const models = model.children;
+    model.children.forEach((child) => {
+      child.userData = {
+        ...(child.userData ?? {}),
+        nodeId: child.uuid,
+      };
+    });
     const updatedIds = models.map((model) => model.uuid);
-    scene.add(...models);
-    setEditorSceneDataUpdated(updatedIds);
+    const cloned = models.map((model) => model.clone());
+    scene.add(...cloned);
+    setEditorSceneDataUpdated({ id: updatedIds, updatedAt: Date.now() });
     return () => {
       scene.remove(...models);
     };
@@ -543,7 +566,9 @@ const TheModel = () => {
     }
     const { id, data: modified } = modelDataModified;
     const { action, value } = modified;
-    const target = scene.getObjectByProperty("uuid", id);
+    // const target = scene.getObjectByProperty("uuid", id);
+    const target = getSceneObjectByUuid(scene, id);
+
     if (!target) {
       console.error("Target not found", { id });
       return;
@@ -556,6 +581,7 @@ const TheModel = () => {
       });
       // target.updateMatrix();
     } else {
+      debugger;
       console.log("Unknown action", { modelDataModified });
     }
   }, [modelDataModified]);
@@ -570,7 +596,7 @@ const Hotspots = () => {
 // 밖에서 넣어주는 데이터로 그림만 그리는 컴포넌트
 const EditorCanvasRenderer = (props: EditorCanvasProps) => {
   // const setUserSelectedObject = useSetAtom(editorUserSelectedObject);
-  const { scene } = useThree();
+  // const { scene } = useThree();
   // console.log({ scene });
 
   // const [userSelectBox, setUserSelectBox] = useState<React.ReactNode | null>(

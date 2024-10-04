@@ -11,12 +11,15 @@ function LeftPanel() {
   //   console.log({ cameras });
   // console.log("LeftPanel");
   const node = useAtomValue(editorModelData);
-  // console.log({ leftpanel: node });
+
+  const rootNode = node ? threeToRootNode(node) : null;
+  console.log({ leftpanel: node });
+  console.log({ rootNode });
 
   return (
     <Container>
       {/* LeftPanel */}
-      <NodeTree node={node ? threeToRootNode(node) : null}></NodeTree>
+      <NodeTree node={rootNode}></NodeTree>
       {/* <div>
         {cameras.cameras.map((camera) => {
           // console.log("LeftPanelData:", { camera, mat: camera.camera });

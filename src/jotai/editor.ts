@@ -100,6 +100,9 @@ export const editorModelDataModified = atom<{
   updatdAt: number;
 } | null>(null);
 
+// 실제 씬의 데이터가 업데이트 된 후 스테이트를 받아서 사용해야하는 경우
+// ex) 업데이트된 모델을 어떤 유저가 선택하고 있는 경우 - 선택한 모델을 따라서 박스가 이동해야함
+//     따라서 실제 씬의 이동된 모델의 크기/포지션이 필요하다
 export const editorSceneDataUpdated = atom<{
   id: string | string[];
   updatedAt: number;

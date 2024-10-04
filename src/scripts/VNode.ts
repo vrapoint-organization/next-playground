@@ -238,7 +238,8 @@ export const threeToRootNode = (
           up: number[];
           uuid: string;
         };
-        const thisId = mesh.uuid;
+        // const thisId = mesh.uuid;
+        const thisId = mesh.userData.nodeId;
         const meshNode = {
           parentId: parentNode.id,
           data: null,
