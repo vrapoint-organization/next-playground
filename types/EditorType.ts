@@ -15,11 +15,11 @@ export interface ParticipantState {
   camera: {
     show: boolean;
     matrix: Matrix4;
-  };
+  } | null;
   selectedObject: {
     show: boolean;
     objectUuid: string | null;
-  };
+  } | null;
 }
 
 export interface CameraAtomType {

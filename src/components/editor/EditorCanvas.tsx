@@ -405,21 +405,25 @@ const UserSelectBox = () => {
 
 const ParticipantCamera = (participant: ParticipantState) => {
   const { camera, color, name, uid, sessionId } = participant;
-  if (!camera.show) {
+  if (!camera || !camera.show) {
     return null;
   }
   return <LineFromMatrix matrix={camera.matrix} color={color}></LineFromMatrix>;
 };
 
 const ParticipantSelectBox = (participant: ParticipantState) => {
-  const { selectedObject, color, name, uid, sessionId } = participant;
-  const { objectUuid } = selectedObject;
-
   const modifiedModelData = useAtomValue(editorSceneDataUpdatedAtom);
   const prevModifiedModelData = useRef<{
     id: string | string[];
     updatedAt: number;
   } | null>(null);
+
+  const { selectedObject, color, name, uid, sessionId } = participant;
+  if (!selectedObject || !selectedObject?.show) {
+    return null;
+  }
+
+  const objectUuid = selectedObject?.objectUuid;
 
   const drawUserSelectBox: boolean = (() => {
     if (!objectUuid) {
