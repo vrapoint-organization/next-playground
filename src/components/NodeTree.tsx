@@ -1,7 +1,10 @@
 import Image from "next/image";
 import type { DataNode } from "../scripts/VNode";
-import { editorUserSelectedObjectAtom } from "../jotai/editor";
-import { useAtom } from "jotai";
+import {
+  editorParticipantAtom,
+  editorUserSelectedObjectAtom,
+} from "../jotai/editor";
+import { useAtom, useAtomValue } from "jotai";
 
 const typeMap: { [key in DataNode["type"]]: any } = {
   ambientlight: "조명",
@@ -25,10 +28,14 @@ const RecursiveNodeTree = ({ node, options: inputOptions }: NodeTreeProps) => {
   const childOption = { ...options, depth: options.depth + 1 };
 
   const [selected, setSelected] = useAtom(editorUserSelectedObjectAtom);
+  const participant = useAtomValue(editorParticipantAtom);
 
   if (!node) {
     return null;
   }
+  const otherSelected = participant.find(
+    (p) => p.selectedObject?.objectUuid === node?.id
+  );
   const type = node.type;
   const name = type ? typeMap[type] : "노드";
   // console.log({ type });
@@ -58,6 +65,17 @@ const RecursiveNodeTree = ({ node, options: inputOptions }: NodeTreeProps) => {
     >
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div>{name}</div>
+        {otherSelected && (
+          <div
+            style={{
+              color: otherSelected.color,
+              fontSize: 14,
+              textDecoration: "underline",
+            }}
+          >
+            {otherSelected.name}
+          </div>
+        )}
         {isImage && (
           <Image
             width={20}

@@ -72,7 +72,11 @@ const EditorFlowChannelHandler = (mySessionId: string) => (msg: IMessage) => {
           });
         }
       });
-      return copied;
+      // copied에 있지만 users에 없는 유저 삭제
+      const filtered = copied.filter((prevUsers) =>
+        users.some((u) => u.data.wsSessionId === prevUsers.sessionId)
+      );
+      return filtered;
     });
   } else if (type === "USER_STATE") {
     type SingleUserStateData = {

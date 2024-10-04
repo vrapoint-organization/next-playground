@@ -587,9 +587,6 @@ const TheModel = () => {
   const setEditorSceneDataUpdated = useSetAtom(editorSceneDataUpdatedAtom);
   const { scene } = useThree();
   // console.log({ Themodel: model });
-  if (!model) {
-    return null;
-  }
 
   useEffect(() => {
     // const copied = model.children.map((child) => child.clone());
@@ -597,6 +594,9 @@ const TheModel = () => {
     // return () => {
     //   scene.remove(...copied);
     // };
+    if (!model) {
+      return;
+    }
     const models = model.children;
     model.children.forEach((child) => {
       child.userData = {

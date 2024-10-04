@@ -168,7 +168,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
           >
             Move right box
           </button>
-          <div style={{ display: "flex" }}>
+          {/* <div style={{ display: "flex" }}>
             <button
               onClick={() => {
                 //@ts-ignore
@@ -296,7 +296,7 @@ const _Editor = ({ myId, projectId }: EditorProps) => {
             >
               User2 select Right
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     );
